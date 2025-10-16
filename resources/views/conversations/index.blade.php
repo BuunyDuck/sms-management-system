@@ -227,6 +227,7 @@
         <div class="header">
             <h1>💬 SMS Conversations</h1>
             <p>View and manage all your text message conversations</p>
+            <p style="margin-top: 10px; font-size: 14px; opacity: 0.9;">📅 Showing conversations from the last 30 days (top 50)</p>
             <div class="header-actions">
                 <a href="{{ url('/') }}" class="btn btn-secondary">← Home</a>
                 <a href="{{ url('/send') }}" class="btn btn-primary">+ New Message</a>
@@ -261,12 +262,12 @@
                                     </span>
                                 </div>
                                 <div class="conversation-preview">
-                                    @if($conversation->last_message->isInbound())
+                                    @if($conversation->is_inbound)
                                         <span class="direction-badge">📥</span>
                                     @else
                                         <span class="direction-badge">📤</span>
                                     @endif
-                                    {{ Str::limit($conversation->last_message->Body ?? '(Media message)', 60) }}
+                                    {{ Str::limit($conversation->last_body ?? '(Media message)', 60) }}
                                 </div>
                             </div>
                             <div class="conversation-meta">

@@ -33,6 +33,24 @@ class SmsController extends Controller
             'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,mov,pdf|max:5120', // 5MB max
         ]);
 
+        // Normalize phone number to E.164 format (+1XXXXXXXXXX)
+        $phoneNumber = $validated['to'];
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber); // Remove all non-digits except +
+        
+        // If it doesn't start with +, add +1 for US
+        if (!str_starts_with($phoneNumber, '+')) {
+            // Remove leading 1 if present
+            $phoneNumber = ltrim($phoneNumber, '1');
+            $phoneNumber = '+1' . $phoneNumber;
+        }
+        
+        // If it starts with + but missing country code
+        if ($phoneNumber === '+' . ltrim($phoneNumber, '+') && strlen(ltrim($phoneNumber, '+')) === 10) {
+            $phoneNumber = '+1' . ltrim($phoneNumber, '+');
+        }
+        
+        $validated['to'] = $phoneNumber;
+
         $mediaUrl = $validated['media_url'] ?? null;
 
         // Handle file upload
@@ -112,15 +130,13 @@ class SmsController extends Controller
                 }
 
                 SmsMessage::create([
-                    'From' => config('services.twilio.from_number'),
-                    'To' => $validated['to'],
-                    'Body' => $validated['body'],
-                    'MessageSid' => $result['message_sid'],
-                    'AccountSid' => config('services.twilio.account_sid'),
-                    'NumMedia' => $numMedia,
-                    'Status' => $result['status'],
-                    'Direction' => 'outbound',
-                    'nummedia' => $numMedia,
+                    'FROM' => config('services.twilio.from_number'),
+                    'TO' => $validated['to'],
+                    'BODY' => $validated['body'],
+                    'MESSAGESID' => $result['message_sid'],
+                    'ACCOUNTSID' => config('services.twilio.account_sid'),
+                    'NUMMEDIA' => $numMedia,
+                    'MESSAGESTATUS' => $result['status'],
                     'mediaurllist' => $mediaUrlList,
                     'mediatypelist' => $mediaTypeList,
                 ]);

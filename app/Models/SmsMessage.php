@@ -14,11 +14,11 @@ class SmsMessage extends Model
     /**
      * The primary key associated with the table.
      */
-    protected $primaryKey = 'ID';
+    protected $primaryKey = 'id';
 
     /**
      * Indicates if the model should be timestamped.
-     * The table uses DateCreated instead of created_at/updated_at
+     * The table uses thetime instead of created_at/updated_at
      */
     public $timestamps = false;
 
@@ -26,36 +26,43 @@ class SmsMessage extends Model
      * The attributes that should be cast.
      */
     protected $casts = [
-        'DateCreated' => 'datetime',
-        'nummedia' => 'integer',
+        'thetime' => 'datetime',
+        'NUMMEDIA' => 'integer',
     ];
+    
+    /**
+     * Date column for ordering
+     */
+    const CREATED_AT = 'thetime';
 
     /**
      * The attributes that are mass assignable.
      */
     protected $fillable = [
-        'From',
-        'To',
-        'Body',
-        'MessageSid',
-        'AccountSid',
-        'MessagingServiceSid',
-        'NumMedia',
-        'NumSegments',
-        'Status',
-        'Direction',
-        'ApiVersion',
-        'nummedia',
+        'FROM',
+        'TO',
+        'BODY',
+        'MESSAGESID',
+        'ACCOUNTSID',
+        'MESSAGINGSERVICESID',
+        'NUMMEDIA',
+        'NUMSEGMENTS',
+        'MESSAGESTATUS',
+        'SMSSTATUS',
+        'APIVERSION',
         'mediaurllist',
         'mediatypelist',
-        'FromCity',
-        'FromState',
-        'FromZip',
-        'FromCountry',
-        'ToCity',
-        'ToState',
-        'ToZip',
-        'ToCountry',
+        'FROMCITY',
+        'FROMSTATE',
+        'FROMZIP',
+        'FROMCOUNTRY',
+        'TOCITY',
+        'TOSTATE',
+        'TOZIP',
+        'TOCOUNTRY',
+        'custsku',
+        'user_id',
+        'ticketid',
     ];
 
     /**
@@ -105,7 +112,8 @@ class SmsMessage extends Model
     public function isOutbound(): bool
     {
         // Messages from our Twilio number are outbound
-        return $this->From === config('services.twilio.from_number');
+        $twilioNumber = config('services.twilio.from_number');
+        return $this->FROM && $this->FROM === $twilioNumber;
     }
 
     /**
@@ -119,9 +127,9 @@ class SmsMessage extends Model
     /**
      * Get the other party's phone number (not our Twilio number)
      */
-    public function getContactNumberAttribute(): string
+    public function getContactNumberAttribute(): ?string
     {
-        return $this->isInbound() ? $this->From : $this->To;
+        return $this->isInbound() ? ($this->FROM ?? 'Unknown') : ($this->TO ?? 'Unknown');
     }
 
     /**
@@ -149,13 +157,13 @@ class SmsMessage extends Model
         return $query->where(function ($q) use ($phoneNumber, $twilioNumber) {
             // Inbound: From customer to us
             $q->where(function ($subQ) use ($phoneNumber, $twilioNumber) {
-                $subQ->where('From', $phoneNumber)
-                     ->where('To', $twilioNumber);
+                $subQ->where('FROM', $phoneNumber)
+                     ->where('TO', $twilioNumber);
             })
             // Outbound: From us to customer
             ->orWhere(function ($subQ) use ($phoneNumber, $twilioNumber) {
-                $subQ->where('From', $twilioNumber)
-                     ->where('To', $phoneNumber);
+                $subQ->where('FROM', $twilioNumber)
+                     ->where('TO', $phoneNumber);
             });
         });
     }
@@ -165,7 +173,7 @@ class SmsMessage extends Model
      */
     public function scopeLatest($query)
     {
-        return $query->orderBy('DateCreated', 'desc');
+        return $query->orderBy('thetime', 'desc');
     }
 
     /**
@@ -173,7 +181,7 @@ class SmsMessage extends Model
      */
     public function scopeOldest($query)
     {
-        return $query->orderBy('DateCreated', 'asc');
+        return $query->orderBy('thetime', 'asc');
     }
 }
 

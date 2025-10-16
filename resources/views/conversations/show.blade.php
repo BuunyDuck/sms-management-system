@@ -307,7 +307,7 @@
 
         @foreach($messages as $message)
             @php
-                $messageDate = $message->DateCreated->format('Y-m-d');
+                $messageDate = $message->thetime->format('Y-m-d');
                 $showDateDivider = $lastDate !== $messageDate;
                 $lastDate = $messageDate;
             @endphp
@@ -315,12 +315,12 @@
             @if($showDateDivider)
                 <div class="date-divider">
                     <span>
-                        @if($message->DateCreated->isToday())
+                        @if($message->thetime->isToday())
                             Today
-                        @elseif($message->DateCreated->isYesterday())
+                        @elseif($message->thetime->isYesterday())
                             Yesterday
                         @else
-                            {{ $message->DateCreated->format('M j, Y') }}
+                            {{ $message->thetime->format('M j, Y') }}
                         @endif
                     </span>
                 </div>
@@ -328,9 +328,9 @@
 
             <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}">
                 <div class="message-bubble">
-                    {{ $message->Body }}
+                    {{ $message->BODY }}
                     
-                    @if($message->nummedia > 0)
+                    @if($message->NUMMEDIA > 0)
                         <div class="message-media">
                             @foreach($message->media_attachments as $media)
                                 @if(str_starts_with($media['type'], 'image/'))
@@ -349,7 +349,7 @@
                     @endif
                 </div>
                 <div class="message-timestamp">
-                    {{ $message->DateCreated->format('g:i A') }}
+                    {{ $message->thetime->format('g:i A') }}
                 </div>
             </div>
         @endforeach

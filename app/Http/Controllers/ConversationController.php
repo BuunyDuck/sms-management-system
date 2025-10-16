@@ -6,6 +6,7 @@ use App\Models\SmsMessage;
 use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ConversationController extends Controller
 {
@@ -20,33 +21,46 @@ class ConversationController extends Controller
     {
         $twilioNumber = config('services.twilio.from_number');
 
-        // Get all unique phone numbers (excluding our Twilio number)
-        $conversations = SmsMessage::select(
-                DB::raw('CASE 
-                    WHEN `From` = ? THEN `To` 
-                    ELSE `From` 
-                END as contact_number'),
-                DB::raw('MAX(DateCreated) as last_message_date'),
-                DB::raw('COUNT(*) as message_count')
-            )
+        // Get recent conversations (last 30 days only for performance with 96K+ messages)
+        $since = now()->subDays(30);
+        
+        // Get all recent messages involving our Twilio number
+        $recentMessages = SmsMessage::where('thetime', '>=', $since)
             ->where(function ($query) use ($twilioNumber) {
-                $query->where('From', $twilioNumber)
-                      ->orWhere('To', $twilioNumber);
+                $query->where('FROM', $twilioNumber)
+                      ->orWhere('TO', $twilioNumber);
             })
-            ->setBindings([$twilioNumber])
-            ->groupBy('contact_number')
-            ->orderBy('last_message_date', 'desc')
+            ->whereNotNull('FROM')
+            ->whereNotNull('TO')
+            ->orderBy('thetime', 'desc')
             ->get();
-
-        // Enhance each conversation with last message details
-        foreach ($conversations as $conversation) {
-            $lastMessage = SmsMessage::forNumber($conversation->contact_number)
-                ->latest()
-                ->first();
+        
+        // Group by contact number
+        $conversationsData = [];
+        foreach ($recentMessages as $message) {
+            $contactNumber = ($message->FROM === $twilioNumber) ? $message->TO : $message->FROM;
             
-            $conversation->last_message = $lastMessage;
-            $conversation->formatted_number = $this->formatPhoneNumber($conversation->contact_number);
+            if (!isset($conversationsData[$contactNumber])) {
+                $conversationsData[$contactNumber] = (object)[
+                    'contact_number' => $contactNumber,
+                    'last_message_date' => $message->thetime,
+                    'last_body' => $message->BODY,
+                    'is_inbound' => ($message->FROM !== $twilioNumber),
+                    'message_count' => 1,
+                    'formatted_number' => $this->formatPhoneNumber($contactNumber),
+                ];
+            } else {
+                $conversationsData[$contactNumber]->message_count++;
+            }
         }
+        
+        // Convert to collection and sort
+        $conversations = collect($conversationsData)
+            ->sortByDesc(function($conv) {
+                return $conv->last_message_date;
+            })
+            ->take(50)
+            ->values();
 
         return view('conversations.index', compact('conversations'));
     }
@@ -81,9 +95,16 @@ class ConversationController extends Controller
      */
     public function send(Request $request, string $phoneNumber)
     {
-        // Ensure phone number is in E.164 format
+        // Normalize phone number to E.164 format
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber);
         if (!str_starts_with($phoneNumber, '+')) {
-            $phoneNumber = '+' . $phoneNumber;
+            $phoneNumber = ltrim($phoneNumber, '1');
+            $phoneNumber = '+1' . $phoneNumber;
+        }
+        
+        // If it starts with + but missing country code
+        if ($phoneNumber === '+' . ltrim($phoneNumber, '+') && strlen(ltrim($phoneNumber, '+')) === 10) {
+            $phoneNumber = '+1' . ltrim($phoneNumber, '+');
         }
 
         $validated = $request->validate([
@@ -109,7 +130,49 @@ class ConversationController extends Controller
             $options
         );
 
+        // Save to database if successful
         if ($result['success']) {
+            try {
+                // Prepare media data
+                $mediaUrl = $validated['media_url'] ?? null;
+                $numMedia = $mediaUrl ? 1 : 0;
+                $mediaUrlList = $mediaUrl ? $mediaUrl : '';
+                $mediaTypeList = '';
+                
+                // Try to determine content type from URL
+                if ($mediaUrl) {
+                    $extension = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+                    $mediaTypeList = match($extension) {
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                        'gif' => 'image/gif',
+                        'mp4' => 'video/mp4',
+                        'pdf' => 'application/pdf',
+                        default => 'application/octet-stream',
+                    };
+                }
+
+                SmsMessage::create([
+                    'FROM' => config('services.twilio.from_number'),
+                    'TO' => $phoneNumber,
+                    'BODY' => $validated['body'],
+                    'MESSAGESID' => $result['message_sid'],
+                    'ACCOUNTSID' => config('services.twilio.account_sid'),
+                    'NUMMEDIA' => $numMedia,
+                    'MESSAGESTATUS' => $result['status'],
+                    'mediaurllist' => $mediaUrlList,
+                    'mediatypelist' => $mediaTypeList,
+                ]);
+
+                Log::info('✅ Outbound message saved to database from conversation', ['message_sid' => $result['message_sid']]);
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to save outbound message to database', [
+                    'error' => $e->getMessage(),
+                    'message_sid' => $result['message_sid'] ?? null,
+                ]);
+                // Don't fail the redirect if database save fails
+            }
+
             return redirect()
                 ->route('conversations.show', ['phoneNumber' => ltrim($phoneNumber, '+')])
                 ->with('success', '✅ Message sent successfully!');
