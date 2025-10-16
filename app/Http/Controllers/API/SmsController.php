@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\SmsMessage;
 use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -89,8 +90,50 @@ class SmsController extends Controller
             $options
         );
 
-        // Return response
+        // Save to database if successful
         if ($result['success']) {
+            try {
+                // Prepare media data
+                $numMedia = $mediaUrl ? 1 : 0;
+                $mediaUrlList = $mediaUrl ? $mediaUrl : '';
+                $mediaTypeList = '';
+                
+                // Try to determine content type from URL
+                if ($mediaUrl) {
+                    $extension = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+                    $mediaTypeList = match($extension) {
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                        'gif' => 'image/gif',
+                        'mp4' => 'video/mp4',
+                        'pdf' => 'application/pdf',
+                        default => 'application/octet-stream',
+                    };
+                }
+
+                SmsMessage::create([
+                    'From' => config('services.twilio.from_number'),
+                    'To' => $validated['to'],
+                    'Body' => $validated['body'],
+                    'MessageSid' => $result['message_sid'],
+                    'AccountSid' => config('services.twilio.account_sid'),
+                    'NumMedia' => $numMedia,
+                    'Status' => $result['status'],
+                    'Direction' => 'outbound',
+                    'nummedia' => $numMedia,
+                    'mediaurllist' => $mediaUrlList,
+                    'mediatypelist' => $mediaTypeList,
+                ]);
+
+                Log::info('✅ Outbound message saved to database', ['message_sid' => $result['message_sid']]);
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to save outbound message to database', [
+                    'error' => $e->getMessage(),
+                    'message_sid' => $result['message_sid'] ?? null,
+                ]);
+                // Don't fail the API call if database save fails
+            }
+
             return response()->json([
                 'success' => true,
                 'message' => 'SMS sent successfully',

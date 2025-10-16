@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Models\SmsMessage;
 use App\Services\TwilioService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -78,8 +79,59 @@ class WebhookController extends Controller
         echo "═══════════════════════════════════════════════\n";
         echo "\n";
 
+        // Save to database
+        try {
+            // Prepare media URLs and types
+            $mediaUrlList = '';
+            $mediaTypeList = '';
+            
+            if ($message['num_media'] > 0) {
+                $urls = [];
+                $types = [];
+                foreach ($message['media_urls'] as $media) {
+                    $urls[] = $media['url'];
+                    $types[] = $media['content_type'];
+                }
+                $mediaUrlList = implode("\t", $urls);
+                $mediaTypeList = implode("\t", $types);
+            }
+
+            SmsMessage::create([
+                'From' => $message['from'],
+                'To' => $message['to'],
+                'Body' => $message['body'],
+                'MessageSid' => $message['message_sid'],
+                'AccountSid' => $message['account_sid'],
+                'MessagingServiceSid' => $message['messaging_service_sid'] ?? null,
+                'NumMedia' => $message['num_media'],
+                'NumSegments' => $message['num_segments'] ?? 1,
+                'Status' => $message['status'] ?? 'received',
+                'Direction' => 'inbound',
+                'ApiVersion' => $message['api_version'] ?? null,
+                'nummedia' => $message['num_media'],
+                'mediaurllist' => $mediaUrlList,
+                'mediatypelist' => $mediaTypeList,
+                'FromCity' => $message['from_city'],
+                'FromState' => $message['from_state'],
+                'FromZip' => $message['from_zip'],
+                'FromCountry' => $message['from_country'],
+                'ToCity' => $message['to_city'] ?? null,
+                'ToState' => $message['to_state'] ?? null,
+                'ToZip' => $message['to_zip'] ?? null,
+                'ToCountry' => $message['to_country'] ?? null,
+            ]);
+
+            Log::info('✅ Message saved to database', ['message_sid' => $message['message_sid']]);
+            echo "✅ Saved to database\n\n";
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to save message to database', [
+                'error' => $e->getMessage(),
+                'message_sid' => $message['message_sid'],
+            ]);
+            echo "❌ Database error: {$e->getMessage()}\n\n";
+        }
+
         // TODO: Later we'll add:
-        // - Save to database
         // - Check for chatbot keywords
         // - Send email notification
         // - Link to customer

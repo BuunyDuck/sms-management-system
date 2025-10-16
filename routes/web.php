@@ -105,11 +105,14 @@ Route::get('/send', function () {
     return view('sms-test');
 })->name('send');
 
-// Coming soon pages
-Route::get('/conversations', function () {
-    return view('coming-soon', ['feature' => 'Conversations View']);
-})->name('conversations');
+// Conversations
+use App\Http\Controllers\ConversationController;
 
+Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
+Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
+
+// Coming soon pages
 Route::get('/chatbot', function () {
     return view('coming-soon', ['feature' => 'Chatbot Manager']);
 })->name('chatbot');
