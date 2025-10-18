@@ -87,7 +87,10 @@ class ConversationController extends Controller
         $formattedNumber = $this->formatPhoneNumber($phoneNumber);
         $messageCount = $messages->count();
 
-        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount'));
+        // Get customer information from the first message
+        $customerInfo = $messages->first()->getCustomerInfo();
+
+        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'customerInfo'));
     }
 
     /**

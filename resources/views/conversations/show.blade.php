@@ -61,6 +61,47 @@
             color: #8e8e93;
         }
 
+        .customer-name {
+            font-size: 14px;
+            color: #007aff;
+            font-weight: 500;
+            margin-top: 4px;
+        }
+
+        .quick-links {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .quick-link {
+            padding: 6px 12px;
+            background: #f0f0f0;
+            border-radius: 8px;
+            text-decoration: none;
+            color: #333;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .quick-link:hover {
+            background: #007aff;
+            color: white;
+        }
+
+        .quick-link.account {
+            background: #007aff;
+            color: white;
+        }
+
+        .quick-link.account:hover {
+            background: #0051d5;
+        }
+
         .messages-container {
             flex: 1;
             overflow-y: auto;
@@ -284,8 +325,27 @@
             <div class="contact-info">
                 <h1>{{ $formattedNumber }}</h1>
                 <p>{{ $messageCount }} messages</p>
+                @if($customerInfo)
+                    <div class="customer-name">👤 {{ $customerInfo->name }}</div>
+                @endif
             </div>
         </div>
+        @if($customerInfo)
+        <div class="quick-links">
+            <a href="http://www.montanasky.net/MyAccount/AdminEdit.tpl?sku={{ $customerInfo->sku }}&findnet=y" 
+               target="_blank" 
+               class="quick-link account" 
+               title="Open Customer Account">
+                📋 Account
+            </a>
+            <a href="http://www.montanasky.net/MyAccount/TicketTracker/NewTicket.tpl?ticType=Support&tAction=SEARCH&uid={{ $customerInfo->sku }}&bdy=&subj=From+SMS" 
+               target="_blank" 
+               class="quick-link" 
+               title="Create Support Ticket">
+                🎫 New Ticket
+            </a>
+        </div>
+        @endif
     </div>
 
     @if(session('success'))

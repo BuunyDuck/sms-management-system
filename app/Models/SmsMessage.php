@@ -183,5 +183,38 @@ class SmsMessage extends Model
     {
         return $query->orderBy('thetime', 'asc');
     }
+
+    /**
+     * Get customer information associated with this message's contact number
+     */
+    public function getCustomerInfo(): ?object
+    {
+        // Get the contact's phone number (not our Twilio number)
+        $phoneNumber = $this->contact_number;
+        
+        if (!$phoneNumber || $phoneNumber === 'Unknown') {
+            return null;
+        }
+        
+        // Get last 10 digits of phone number
+        $last10 = substr(preg_replace('/[^0-9]/', '', $phoneNumber), -10);
+        
+        // Query cat_customer_to_phone to find customer SKU
+        $customerPhone = \DB::table('cat_customer_to_phone')
+            ->where('phone', $last10)
+            ->orderBy('is_primary_record_for_cat_sms', 'DESC')
+            ->first();
+        
+        if (!$customerPhone) {
+            return null;
+        }
+        
+        // Get customer details from db_297_netcustomers
+        $customer = \DB::table('db_297_netcustomers')
+            ->where('sku', $customerPhone->customer_sku)
+            ->first();
+        
+        return $customer;
+    }
 }
 
