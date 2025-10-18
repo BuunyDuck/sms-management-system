@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>💬 {{ $formattedNumber }}</title>
     <meta name="csrf-token" content="{{ csrf_token() }}">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -417,9 +418,23 @@
     </div>
 
     <div class="compose-area">
+        <!-- Quick Response Templates -->
+        <div class="quick-responses" id="quick-responses" style="display: none; padding: 10px; background: #f8f8f8; border-bottom: 1px solid #d1d1d6; max-height: 200px; overflow-y: auto;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                <strong style="font-size: 13px; color: #333;">📋 Quick Responses</strong>
+                <a href="#" onclick="document.getElementById('quick-responses').style.display='none'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px;">Hide</a>
+            </div>
+            <div id="quick-response-content" style="font-size: 12px;">
+                Loading...
+            </div>
+        </div>
+        
         <form method="POST" action="{{ route('conversations.send', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}" class="compose-form">
             @csrf
             <div class="compose-input-wrapper">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                    <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
+                </div>
                 <textarea 
                     name="body" 
                     class="compose-input" 
@@ -444,6 +459,25 @@
     </div>
 
     <script>
+        // Load quick response templates
+        fetch('https://www.montanasky.net/MyAccount/TicketTracker/ajax/AI-Messages-Include.tpl?prepared_sms_text_area_id=message-input&is_include_media_tag=T')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('quick-response-content').innerHTML = html;
+                
+                // Fix button clicks to work with our textarea id
+                document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
+                    const originalClick = btn.getAttribute('onclick');
+                    // Replace #smsmessage with #message-input
+                    const newClick = originalClick.replace(/#smsmessage/g, '#message-input');
+                    btn.setAttribute('onclick', newClick);
+                });
+            })
+            .catch(error => {
+                document.getElementById('quick-response-content').innerHTML = '<span style="color: #999;">Failed to load quick responses</span>';
+                console.error('Error loading quick responses:', error);
+            });
+
         // Auto-resize textarea
         const messageInput = document.getElementById('message-input');
         messageInput.addEventListener('input', function() {
