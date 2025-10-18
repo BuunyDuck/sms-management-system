@@ -575,6 +575,13 @@
         </form>
     </div>
 
+    <!-- Hidden Archive Form (permanent in DOM for Safari iOS compatibility) -->
+    <form id="archive-form" method="POST" action="{{ route('conversations.archive') }}" target="_blank" style="display: none;">
+        @csrf
+        <input type="hidden" name="phone_number" id="archive-phone" value="{{ $phoneNumber }}">
+        <input type="hidden" name="ids" id="archive-ids" value="">
+    </form>
+
     <script>
         // Load quick response templates via our proxy (avoids CORS)
         fetch('{{ route('quick-responses') }}')
@@ -796,44 +803,15 @@
                 return;
             }
             
-            // Create form and submit
-            const form = document.createElement('form');
-            form.method = 'POST';
-            form.action = '{{ route("conversations.archive") }}';
-            form.target = '_blank';
-            form.style.display = 'none'; // Hide it but keep in DOM
+            // Use the permanent hidden form (Safari iOS compatible)
+            const form = document.getElementById('archive-form');
+            const idsInput = document.getElementById('archive-ids');
             
-            // Add CSRF token
-            const csrfInput = document.createElement('input');
-            csrfInput.type = 'hidden';
-            csrfInput.name = '_token';
-            csrfInput.value = '{{ csrf_token() }}';
-            form.appendChild(csrfInput);
-            
-            // Add phone number
-            const phoneInput = document.createElement('input');
-            phoneInput.type = 'hidden';
-            phoneInput.name = 'phone_number';
-            phoneInput.value = '{{ $phoneNumber }}';
-            form.appendChild(phoneInput);
-            
-            // Add message IDs
-            const idsInput = document.createElement('input');
-            idsInput.type = 'hidden';
-            idsInput.name = 'ids';
+            // Update the IDs
             idsInput.value = ids.join(',');
-            form.appendChild(idsInput);
             
-            document.body.appendChild(form);
+            // Submit the form (opens in new tab via target="_blank")
             form.submit();
-            
-            // Don't remove form immediately - Safari iOS needs time to process
-            // Form is hidden anyway, so it won't affect the UI
-            setTimeout(() => {
-                if (form.parentNode) {
-                    document.body.removeChild(form);
-                }
-            }, 1000);
         }
     </script>
 </body>
