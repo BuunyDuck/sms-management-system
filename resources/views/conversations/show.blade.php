@@ -399,26 +399,36 @@
             sendButton.disabled = this.value.trim() === '';
         });
 
-        // Scroll to last message using scrollIntoView (more reliable!)
-        function scrollToLastMessage() {
+        // Scroll to absolute bottom of messages container
+        const messagesContainer = document.getElementById('messages-container');
+        
+        function scrollToAbsoluteBottom() {
+            // Method 1: Scroll container to max height
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            
+            // Method 2: Also try scrollIntoView on last message
             const lastMessage = document.getElementById('last-message');
             if (lastMessage) {
-                lastMessage.scrollIntoView({ behavior: 'auto', block: 'end' });
+                lastMessage.scrollIntoView({ behavior: 'instant', block: 'nearest', inline: 'nearest' });
             }
+            
+            // Method 3: Force scroll to bottom again
+            messagesContainer.scrollTop = messagesContainer.scrollHeight + 1000;
         }
 
-        // Always scroll to last message on page load
-        // Use multiple attempts to handle images loading
-        scrollToLastMessage();
-        setTimeout(scrollToLastMessage, 50);
-        setTimeout(scrollToLastMessage, 150);
-        setTimeout(scrollToLastMessage, 300);
-        setTimeout(scrollToLastMessage, 500);
+        // Aggressive scrolling on page load
+        scrollToAbsoluteBottom();
+        setTimeout(scrollToAbsoluteBottom, 50);
+        setTimeout(scrollToAbsoluteBottom, 150);
+        setTimeout(scrollToAbsoluteBottom, 300);
+        setTimeout(scrollToAbsoluteBottom, 500);
+        setTimeout(scrollToAbsoluteBottom, 1000);
         
-        // Final scroll after everything is loaded
+        // After all images load
         window.addEventListener('load', () => {
-            setTimeout(scrollToLastMessage, 100);
-            setTimeout(scrollToLastMessage, 300);
+            scrollToAbsoluteBottom();
+            setTimeout(scrollToAbsoluteBottom, 200);
+            setTimeout(scrollToAbsoluteBottom, 500);
         });
 
         // Auto-refresh every 5 seconds
