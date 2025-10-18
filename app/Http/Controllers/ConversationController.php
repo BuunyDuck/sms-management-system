@@ -211,6 +211,142 @@ class ConversationController extends Controller
     }
 
     /**
+     * Archive selected messages to ticket
+     */
+    public function archive(Request $request)
+    {
+        $validated = $request->validate([
+            'ids' => 'required|string',
+            'phone_number' => 'required|string',
+        ]);
+
+        // Ensure phone number is in E.164 format
+        $phoneNumber = $validated['phone_number'];
+        if (!str_starts_with($phoneNumber, '+')) {
+            $phoneNumber = '+' . $phoneNumber;
+        }
+
+        // Get messages by IDs
+        $messageIds = explode(',', $validated['ids']);
+        $messages = SmsMessage::whereIn('id', $messageIds)
+            ->orderBy('thetime', 'desc')
+            ->get();
+
+        if ($messages->isEmpty()) {
+            abort(404, 'No messages found');
+        }
+
+        // Get customer info from first message
+        $customerInfo = $messages->first()->getCustomerInfo();
+        
+        // Build formatted message body (like ColdFusion)
+        $formattedBody = $this->buildTicketBody($messages);
+        
+        // Check for existing tickets using the KhurramTools API
+        $ticketInfo = null;
+        if ($customerInfo && $customerInfo->SKU) {
+            $ticketInfo = $this->checkExistingTicket($customerInfo->SKU);
+        }
+
+        return view('conversations.archive', compact('messages', 'phoneNumber', 'customerInfo', 'formattedBody', 'ticketInfo'));
+    }
+
+    /**
+     * Build formatted ticket body from messages
+     */
+    private function buildTicketBody($messages)
+    {
+        $body = '';
+        $mtskyNumbers = ['+14062152048', '+14067524335'];
+
+        foreach ($messages as $message) {
+            $body .= "\r\nDate: ";
+            $body .= $message->thetime->format('Y-m-d h:i A');
+            $body .= "\r\n";
+
+            $messageFromUserType = 'Customer';
+            $messageFromName = '';
+
+            // Check if message is from agent
+            if (in_array($message->FROM, $mtskyNumbers)) {
+                $messageFromUserType = 'Agent';
+                
+                // Extract agent initials from fromname
+                $agentName = $message->fromname ?? 'MontanaSky';
+                
+                // If name contains colon (e.g., "Support: Arnold Bjork"), extract after colon
+                if (str_contains($agentName, ':')) {
+                    $parts = explode(':', $agentName);
+                    $agentName = trim($parts[1] ?? $agentName);
+                }
+                
+                // Create initials
+                $nameParts = explode(' ', $agentName);
+                $initials = '';
+                foreach ($nameParts as $part) {
+                    if (!empty($part)) {
+                        $initials .= strtoupper($part[0]);
+                    }
+                }
+                
+                $messageFromName = 'MontanaSky' . $initials;
+            } else {
+                // Customer message
+                $messageFromName = ($message->fromname ?? 'Unknown') . ' ' . $message->FROM;
+            }
+
+            $body .= $messageFromUserType . ': ' . $messageFromName . "\r\n";
+            
+            // Sanitize message body (replace ! with . like CF does)
+            $messageBody = str_replace('!', '.', $message->BODY ?? '');
+            $body .= 'Message: ' . $messageBody . "\r\n";
+            $body .= "\r\n";
+            $body .= "---------------\r\n";
+        }
+
+        return $body;
+    }
+
+    /**
+     * Check for existing ticket using KhurramTools API
+     */
+    private function checkExistingTicket($customerSku)
+    {
+        try {
+            $url = 'http://www.montanasky.net/KhurramTools/search.tpl?sku=' . urlencode($customerSku);
+            
+            // Make HTTP request with Basic Auth
+            $context = stream_context_create([
+                'http' => [
+                    'header' => 'Authorization: Basic ' . base64_encode('triggers:l0n3uuo1f')
+                ]
+            ]);
+            
+            $response = @file_get_contents($url, false, $context);
+            
+            if ($response === false) {
+                return null;
+            }
+
+            // Parse response (format: ticketNumber****ticketStatus)
+            $response = trim(str_replace('<!--HAS_WEBDNA_TAGS-->', '', $response));
+            
+            if (strlen($response) > 0 && str_contains($response, '****')) {
+                $parts = explode('****', $response);
+                return [
+                    'number' => $parts[0] ?? null,
+                    'status' => $parts[1] ?? null,
+                ];
+            }
+
+            return null;
+        } catch (\Exception $e) {
+            Log::error('Failed to check existing ticket', ['error' => $e->getMessage()]);
+            return null;
+        }
+    }
+
+    /**
      * Format phone number for display
      */
     private function formatPhoneNumber(string $number): string

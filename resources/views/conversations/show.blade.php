@@ -445,6 +445,21 @@
         </div>
     @endif
 
+    <!-- Archive Button (hidden by default) -->
+    <div id="archive-bar" style="display: none; position: sticky; top: 0; background: #fff3cd; border-bottom: 2px solid #ffc107; padding: 12px 20px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+            <span id="selected-count" style="font-weight: 600; color: #856404;">0 messages selected</span>
+            <div style="display: flex; gap: 10px;">
+                <button type="button" onclick="archiveSelected()" class="btn" style="background: #007aff; color: white; border: none; padding: 8px 20px; border-radius: 6px; font-weight: 600; cursor: pointer;">
+                    📋 Archive to Ticket
+                </button>
+                <button type="button" onclick="clearSelection()" class="btn" style="background: #dc3545; color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer;">
+                    ✕ Clear
+                </button>
+            </div>
+        </div>
+    </div>
+
     <div class="messages-container" id="messages-container">
         @if($messages->isEmpty())
             <div style="text-align: center; padding: 40px 20px; color: #666;">
@@ -479,7 +494,8 @@
                 </div>
             @endif
 
-            <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif>
+            <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif data-message-id="{{ $message->id }}">
+                <input type="checkbox" class="message-checkbox" value="{{ $message->id }}" style="margin-right: 8px; cursor: pointer;">
                 <div class="message-bubble">
                     {{ $message->BODY }}
                     
@@ -708,6 +724,75 @@
                 setTimeout(() => alert.remove(), 500);
             });
         }, 5000);
+
+        // ============ Archive Feature ============
+        
+        // Handle checkbox selection
+        document.addEventListener('change', (e) => {
+            if (e.target.classList.contains('message-checkbox')) {
+                updateArchiveBar();
+            }
+        });
+
+        function updateArchiveBar() {
+            const checkboxes = document.querySelectorAll('.message-checkbox:checked');
+            const count = checkboxes.length;
+            const archiveBar = document.getElementById('archive-bar');
+            const selectedCount = document.getElementById('selected-count');
+            
+            if (count > 0) {
+                archiveBar.style.display = 'block';
+                selectedCount.textContent = count + ' message' + (count !== 1 ? 's' : '') + ' selected';
+            } else {
+                archiveBar.style.display = 'none';
+            }
+        }
+
+        function clearSelection() {
+            document.querySelectorAll('.message-checkbox').forEach(cb => cb.checked = false);
+            updateArchiveBar();
+        }
+
+        function archiveSelected() {
+            const checkboxes = document.querySelectorAll('.message-checkbox:checked');
+            const ids = Array.from(checkboxes).map(cb => cb.value);
+            
+            if (ids.length === 0) {
+                alert('Please select at least one message');
+                return;
+            }
+            
+            // Create form and submit
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = '{{ route("conversations.archive") }}';
+            form.target = '_blank';
+            
+            // Add CSRF token
+            const csrfInput = document.createElement('input');
+            csrfInput.type = 'hidden';
+            csrfInput.name = '_token';
+            csrfInput.value = '{{ csrf_token() }}';
+            form.appendChild(csrfInput);
+            
+            // Add phone number
+            const phoneInput = document.createElement('input');
+            phoneInput.type = 'hidden';
+            phoneInput.name = 'phone_number';
+            phoneInput.value = '{{ $phoneNumber }}';
+            form.appendChild(phoneInput);
+            
+            // Add message IDs
+            const idsInput = document.createElement('input');
+            idsInput.type = 'hidden';
+            idsInput.name = 'ids';
+            idsInput.value = ids.join(',');
+            form.appendChild(idsInput);
+            
+            document.body.appendChild(form);
+            form.submit();
+            document.body.removeChild(form);
+        }
     </script>
 </body>
 </html>

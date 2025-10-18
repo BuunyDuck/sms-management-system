@@ -111,6 +111,7 @@ use App\Http\Controllers\ConversationController;
 Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
 Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
 Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
+Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
 
 // Proxy for quick response templates (to avoid CORS)
 Route::get('/api/quick-responses', function () {
