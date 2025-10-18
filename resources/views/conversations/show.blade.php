@@ -103,6 +103,40 @@
             background: #0051d5;
         }
 
+        /* Quick Response Buttons Styling */
+        #ai-message-include-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        #ai-message-include-btns div {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            background: #007aff !important;
+            color: white !important;
+            border-radius: 8px !important;
+            text-align: center !important;
+            cursor: pointer !important;
+            border: none !important;
+            transition: all 0.2s !important;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ai-message-include-btns div:hover {
+            background: #0051d5 !important;
+            transform: scale(1.02);
+        }
+
+        #ai-message-include-btns div:active {
+            transform: scale(0.98);
+        }
+
         .messages-container {
             flex: 1;
             overflow-y: auto;
