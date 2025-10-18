@@ -398,9 +398,21 @@
             sendButton.disabled = this.value.trim() === '';
         });
 
-        // Scroll to bottom on load
+        // Scroll to bottom function
         const messagesContainer = document.getElementById('messages-container');
-        messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        function scrollToBottom() {
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        }
+
+        // Scroll to bottom on load (after all images are loaded)
+        window.addEventListener('load', () => {
+            scrollToBottom();
+            // Extra scroll after a delay to catch any late-loading content
+            setTimeout(scrollToBottom, 100);
+        });
+
+        // Also scroll immediately in case images are cached
+        scrollToBottom();
 
         // Auto-refresh every 5 seconds
         let lastMessageCount = {{ $messageCount }};
