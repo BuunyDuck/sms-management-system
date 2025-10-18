@@ -29,12 +29,50 @@
             align-items: center;
             justify-content: space-between;
             flex-shrink: 0;
+            flex-wrap: wrap;
         }
 
         .chat-header-left {
             display: flex;
             align-items: center;
             gap: 15px;
+        }
+        
+        .timeframe-filter {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-top: 10px;
+            width: 100%;
+            padding-top: 10px;
+            border-top: 1px solid #e5e5ea;
+        }
+        
+        .timeframe-filter label {
+            font-size: 14px;
+            font-weight: 500;
+            color: #333;
+        }
+        
+        .timeframe-filter select {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
+            color: #333;
+            font-size: 14px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+        
+        .timeframe-filter select:hover {
+            border-color: #007aff;
+        }
+        
+        .message-stats {
+            font-size: 12px;
+            color: #666;
+            margin-left: 10px;
         }
 
         .back-button {
@@ -381,6 +419,18 @@
             </a>
         </div>
         @endif
+        <div class="timeframe-filter">
+            <label for="timeframe">📅 Show messages from:</label>
+            <select id="timeframe" name="timeframe" onchange="window.location.href='{{ route('conversation.show', $phoneNumber) }}?timeframe=' + this.value">
+                <option value="24h" {{ $timeframe == '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+                <option value="48h" {{ $timeframe == '48h' ? 'selected' : '' }}>Last 48 Hours</option>
+                <option value="week" {{ $timeframe == 'week' ? 'selected' : '' }}>This Week</option>
+                <option value="month" {{ $timeframe == 'month' ? 'selected' : '' }}>This Month</option>
+                <option value="year" {{ $timeframe == 'year' ? 'selected' : '' }}>This Year</option>
+                <option value="all" {{ $timeframe == 'all' ? 'selected' : '' }}>All Time</option>
+            </select>
+            <span class="message-stats">(Showing {{ $messageCount }} of {{ $totalMessageCount }} total)</span>
+        </div>
     </div>
 
     @if(session('success'))
@@ -396,6 +446,13 @@
     @endif
 
     <div class="messages-container" id="messages-container">
+        @if($messages->isEmpty())
+            <div style="text-align: center; padding: 40px 20px; color: #666;">
+                <p style="font-size: 18px; margin-bottom: 10px;">📭 No messages found</p>
+                <p style="font-size: 14px;">Try selecting a different timeframe from the dropdown above.</p>
+            </div>
+        @endif
+        
         @php
             $lastDate = null;
         @endphp

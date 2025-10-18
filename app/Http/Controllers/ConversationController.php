@@ -68,29 +68,53 @@ class ConversationController extends Controller
     /**
      * Display a specific conversation
      */
-    public function show(string $phoneNumber)
+    public function show(Request $request, string $phoneNumber)
     {
         // Ensure phone number is in E.164 format
         if (!str_starts_with($phoneNumber, '+')) {
             $phoneNumber = '+' . $phoneNumber;
         }
 
-        // Get all messages for this conversation
-        $messages = SmsMessage::forNumber($phoneNumber)
-            ->oldest()
-            ->get();
+        // Get timeframe filter (default to 24 hours)
+        $timeframe = $request->input('timeframe', '24h');
+        
+        // Calculate date filter based on timeframe
+        $dateFilter = match($timeframe) {
+            '24h' => now()->subHours(24),
+            '48h' => now()->subHours(48),
+            'week' => now()->subWeek(),
+            'month' => now()->subMonth(),
+            'year' => now()->subYear(),
+            'all' => null,
+            default => now()->subHours(24),
+        };
+
+        // Build query for messages
+        $query = SmsMessage::forNumber($phoneNumber);
+        
+        // Apply date filter if specified
+        if ($dateFilter) {
+            $query->where('thetime', '>=', $dateFilter);
+        }
+        
+        $messages = $query->oldest()->get();
 
         if ($messages->isEmpty()) {
-            abort(404, 'No conversation found for this number');
+            // If no messages in timeframe, show message
+            $messages = collect();
         }
 
         $formattedNumber = $this->formatPhoneNumber($phoneNumber);
         $messageCount = $messages->count();
+        
+        // Get total message count (all time)
+        $totalMessageCount = SmsMessage::forNumber($phoneNumber)->count();
 
-        // Get customer information from the first message
-        $customerInfo = $messages->first()->getCustomerInfo();
+        // Get customer information (fetch from all messages, not just filtered)
+        $firstMessage = SmsMessage::forNumber($phoneNumber)->oldest()->first();
+        $customerInfo = $firstMessage?->getCustomerInfo();
 
-        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'customerInfo'));
+        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'totalMessageCount', 'customerInfo', 'timeframe'));
     }
 
     /**
