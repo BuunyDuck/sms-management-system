@@ -801,6 +801,7 @@
             form.method = 'POST';
             form.action = '{{ route("conversations.archive") }}';
             form.target = '_blank';
+            form.style.display = 'none'; // Hide it but keep in DOM
             
             // Add CSRF token
             const csrfInput = document.createElement('input');
@@ -825,7 +826,14 @@
             
             document.body.appendChild(form);
             form.submit();
-            document.body.removeChild(form);
+            
+            // Don't remove form immediately - Safari iOS needs time to process
+            // Form is hidden anyway, so it won't affect the UI
+            setTimeout(() => {
+                if (form.parentNode) {
+                    document.body.removeChild(form);
+                }
+            }, 1000);
         }
     </script>
 </body>
