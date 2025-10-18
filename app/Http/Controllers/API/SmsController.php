@@ -213,6 +213,24 @@ class SmsController extends Controller
             'to' => 'required|string',
         ]);
 
+        // Normalize phone number to E.164 format (+1XXXXXXXXXX)
+        $phoneNumber = $validated['to'];
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber); // Remove all non-digits except +
+        
+        // If it doesn't start with +, add +1 for US
+        if (!str_starts_with($phoneNumber, '+')) {
+            // Remove leading 1 if present
+            $phoneNumber = ltrim($phoneNumber, '1');
+            $phoneNumber = '+1' . $phoneNumber;
+        }
+        
+        // If it starts with + but missing country code
+        if ($phoneNumber === '+' . ltrim($phoneNumber, '+') && strlen(ltrim($phoneNumber, '+')) === 10) {
+            $phoneNumber = '+1' . ltrim($phoneNumber, '+');
+        }
+        
+        $validated['to'] = $phoneNumber;
+
         $testMessage = "🎉 Test message from SMS Management System!\n\n" .
                       "Time: " . now()->format('g:i A') . "\n" .
                       "If you receive this, the system is working!";
@@ -233,6 +251,29 @@ class SmsController extends Controller
         );
 
         if ($result['success']) {
+            // Save to database
+            try {
+                SmsMessage::create([
+                    'FROM' => config('services.twilio.from_number'),
+                    'TO' => $validated['to'],
+                    'BODY' => $testMessage,
+                    'MESSAGESID' => $result['message_sid'],
+                    'ACCOUNTSID' => config('services.twilio.account_sid'),
+                    'NUMMEDIA' => 0,
+                    'MESSAGESTATUS' => $result['status'],
+                    'mediaurllist' => '',
+                    'mediatypelist' => '',
+                ]);
+
+                Log::info('✅ Test message saved to database', ['message_sid' => $result['message_sid']]);
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to save test message to database', [
+                    'error' => $e->getMessage(),
+                    'message_sid' => $result['message_sid'] ?? null,
+                ]);
+                // Don't fail the API call if database save fails
+            }
+
             Log::info('Test SMS sent', ['to' => $validated['to']]);
             
             return response()->json([
