@@ -445,8 +445,18 @@
         </div>
     @endif
 
+    <!-- Select All Bar (always visible when messages exist) -->
+    @if(!$messages->isEmpty())
+    <div style="position: sticky; top: 0; background: #f8f9fa; border-bottom: 1px solid #dee2e6; padding: 8px 20px; z-index: 99; display: flex; align-items: center; gap: 15px;">
+        <button type="button" onclick="toggleSelectAll()" id="select-all-btn" style="background: #6c757d; color: white; border: none; padding: 6px 16px; border-radius: 4px; font-size: 13px; font-weight: 600; cursor: pointer;">
+            ☑️ Select All
+        </button>
+        <span id="selection-hint" style="font-size: 12px; color: #6c757d;">Select messages to archive to ticket</span>
+    </div>
+    @endif
+
     <!-- Archive Button (hidden by default) -->
-    <div id="archive-bar" style="display: none; position: sticky; top: 0; background: #fff3cd; border-bottom: 2px solid #ffc107; padding: 12px 20px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
+    <div id="archive-bar" style="display: none; position: sticky; top: 41px; background: #fff3cd; border-bottom: 2px solid #ffc107; padding: 12px 20px; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1);">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <span id="selected-count" style="font-weight: 600; color: #856404;">0 messages selected</span>
             <div style="display: flex; gap: 10px;">
@@ -739,6 +749,8 @@
             const count = checkboxes.length;
             const archiveBar = document.getElementById('archive-bar');
             const selectedCount = document.getElementById('selected-count');
+            const selectAllBtn = document.getElementById('select-all-btn');
+            const allCheckboxes = document.querySelectorAll('.message-checkbox');
             
             if (count > 0) {
                 archiveBar.style.display = 'block';
@@ -746,10 +758,32 @@
             } else {
                 archiveBar.style.display = 'none';
             }
+            
+            // Update Select All button text
+            if (selectAllBtn && allCheckboxes.length > 0) {
+                if (count === allCheckboxes.length) {
+                    selectAllBtn.textContent = '☐ Deselect All';
+                    selectAllBtn.style.background = '#6c757d';
+                } else {
+                    selectAllBtn.textContent = '☑️ Select All';
+                    selectAllBtn.style.background = '#6c757d';
+                }
+            }
         }
 
         function clearSelection() {
             document.querySelectorAll('.message-checkbox').forEach(cb => cb.checked = false);
+            updateArchiveBar();
+        }
+
+        function toggleSelectAll() {
+            const allCheckboxes = document.querySelectorAll('.message-checkbox');
+            const checkedCheckboxes = document.querySelectorAll('.message-checkbox:checked');
+            
+            // If all are selected, deselect all. Otherwise, select all
+            const shouldSelect = checkedCheckboxes.length !== allCheckboxes.length;
+            
+            allCheckboxes.forEach(cb => cb.checked = shouldSelect);
             updateArchiveBar();
         }
 
