@@ -310,6 +310,7 @@
                 $messageDate = $message->thetime->format('Y-m-d');
                 $showDateDivider = $lastDate !== $messageDate;
                 $lastDate = $messageDate;
+                $isLastMessage = $loop->last;
             @endphp
 
             @if($showDateDivider)
@@ -326,7 +327,7 @@
                 </div>
             @endif
 
-            <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}">
+            <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif>
                 <div class="message-bubble">
                     {{ $message->BODY }}
                     
@@ -398,51 +399,27 @@
             sendButton.disabled = this.value.trim() === '';
         });
 
-        // Scroll to bottom function
-        const messagesContainer = document.getElementById('messages-container');
-        function scrollToBottom() {
-            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+        // Scroll to last message using scrollIntoView (more reliable!)
+        function scrollToLastMessage() {
+            const lastMessage = document.getElementById('last-message');
+            if (lastMessage) {
+                lastMessage.scrollIntoView({ behavior: 'auto', block: 'end' });
+            }
         }
 
-        // Check if we just refreshed (flag in sessionStorage)
-        if (sessionStorage.getItem('scrollToBottom') === 'true') {
-            sessionStorage.removeItem('scrollToBottom');
-            
-            // Wait for all images to load, then scroll multiple times
-            const images = document.querySelectorAll('img');
-            let loadedImages = 0;
-            
-            if (images.length === 0) {
-                // No images, scroll immediately
-                scrollToBottom();
-                setTimeout(scrollToBottom, 100);
-                setTimeout(scrollToBottom, 300);
-            } else {
-                images.forEach(img => {
-                    if (img.complete) {
-                        loadedImages++;
-                    } else {
-                        img.addEventListener('load', () => {
-                            loadedImages++;
-                            if (loadedImages === images.length) {
-                                scrollToBottom();
-                                setTimeout(scrollToBottom, 100);
-                            }
-                        });
-                    }
-                });
-                
-                // Also scroll with delays as backup
-                setTimeout(scrollToBottom, 100);
-                setTimeout(scrollToBottom, 300);
-                setTimeout(scrollToBottom, 500);
-            }
-        } else {
-            // Initial page load, scroll to bottom
-            scrollToBottom();
-            setTimeout(scrollToBottom, 100);
-            setTimeout(scrollToBottom, 300);
-        }
+        // Always scroll to last message on page load
+        // Use multiple attempts to handle images loading
+        scrollToLastMessage();
+        setTimeout(scrollToLastMessage, 50);
+        setTimeout(scrollToLastMessage, 150);
+        setTimeout(scrollToLastMessage, 300);
+        setTimeout(scrollToLastMessage, 500);
+        
+        // Final scroll after everything is loaded
+        window.addEventListener('load', () => {
+            setTimeout(scrollToLastMessage, 100);
+            setTimeout(scrollToLastMessage, 300);
+        });
 
         // Auto-refresh every 5 seconds
         let lastMessageCount = {{ $messageCount }};
@@ -457,8 +434,8 @@
                 const newMessages = doc.querySelectorAll('.message');
                 
                 if (newMessages.length > lastMessageCount) {
-                    // New messages detected, set flag and reload page
-                    sessionStorage.setItem('scrollToBottom', 'true');
+                    // New messages detected, reload page
+                    // The scrollIntoView will automatically handle scrolling to last message
                     location.reload();
                 }
             } catch (error) {
