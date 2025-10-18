@@ -326,19 +326,19 @@
                 <h1>{{ $formattedNumber }}</h1>
                 <p>{{ $messageCount }} messages</p>
                 @if($customerInfo)
-                    <div class="customer-name">👤 {{ $customerInfo->name }}</div>
+                    <div class="customer-name">👤 {{ $customerInfo->NAME }}</div>
                 @endif
             </div>
         </div>
         @if($customerInfo)
         <div class="quick-links">
-            <a href="http://www.montanasky.net/MyAccount/AdminEdit.tpl?sku={{ $customerInfo->sku }}&findnet=y" 
+            <a href="http://www.montanasky.net/MyAccount/AdminEdit.tpl?sku={{ $customerInfo->SKU }}&findnet=y" 
                target="_blank" 
                class="quick-link account" 
                title="Open Customer Account">
                 📋 Account
             </a>
-            <a href="http://www.montanasky.net/MyAccount/TicketTracker/NewTicket.tpl?ticType=Support&tAction=SEARCH&uid={{ $customerInfo->sku }}&bdy=&subj=From+SMS" 
+            <a href="http://www.montanasky.net/MyAccount/TicketTracker/NewTicket.tpl?ticType=Support&tAction=SEARCH&uid={{ $customerInfo->SKU }}&bdy=&subj=From+SMS" 
                target="_blank" 
                class="quick-link" 
                title="Create Support Ticket">
