@@ -499,12 +499,59 @@
             .then(html => {
                 document.getElementById('quick-response-content').innerHTML = html;
                 
-                // Fix button clicks to work with our textarea id
+                // Fix button clicks to work with our textarea and handle <media> tags
                 document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
-                    const originalClick = btn.getAttribute('onclick');
-                    // Replace #smsmessage with #message-input
-                    const newClick = originalClick.replace(/#smsmessage/g, '#message-input');
-                    btn.setAttribute('onclick', newClick);
+                    // Get the data-content from the hidden div
+                    const contentId = btn.getAttribute('onclick').match(/#(\w+)/)?.[1];
+                    
+                    // Replace the onclick with our custom handler
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        
+                        // Get content from the hidden div
+                        const hiddenDiv = document.getElementById(contentId);
+                        if (hiddenDiv) {
+                            let content = hiddenDiv.getAttribute('data-content');
+                            
+                            // Check for <media> tag
+                            const mediaMatch = content.match(/<media>(.*?)<\/media>/);
+                            
+                            if (mediaMatch) {
+                                // Extract media URL
+                                const mediaUrl = mediaMatch[1];
+                                
+                                // Remove <media> tag from message
+                                content = content.replace(/<media>.*?<\/media>/g, '').trim();
+                                
+                                // Populate media URL field
+                                const mediaUrlInput = document.querySelector('input[name="media_url"]');
+                                if (mediaUrlInput) {
+                                    mediaUrlInput.value = mediaUrl;
+                                }
+                            }
+                            
+                            // Populate message textarea
+                            const messageInput = document.getElementById('message-input');
+                            if (messageInput) {
+                                messageInput.value = content;
+                                messageInput.style.height = 'auto';
+                                messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+                                
+                                // Update character count
+                                const charCount = document.getElementById('char-count');
+                                if (charCount) {
+                                    charCount.textContent = `${content.length} / 1600`;
+                                }
+                                
+                                // Enable send button
+                                const sendButton = document.getElementById('send-button');
+                                if (sendButton) {
+                                    sendButton.disabled = false;
+                                }
+                            }
+                        }
+                        return false;
+                    };
                 });
             })
             .catch(error => {
