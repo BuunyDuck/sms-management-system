@@ -501,8 +501,13 @@
                 
                 // Fix button clicks to work with our textarea and handle <media> tags
                 document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
-                    // Get the data-content from the hidden div
-                    const contentId = btn.getAttribute('onclick').match(/#(\w+)/)?.[1];
+                    // Extract the ID from the onclick: $('#ID').data('content')
+                    const onclickAttr = btn.getAttribute('onclick');
+                    const contentIdMatch = onclickAttr.match(/\$\('#(\w+)'\)\.data\('content'\)/);
+                    
+                    if (!contentIdMatch) return; // Skip if we can't parse it
+                    
+                    const contentId = contentIdMatch[1];
                     
                     // Replace the onclick with our custom handler
                     btn.onclick = function(e) {
