@@ -112,6 +112,17 @@ Route::get('/conversations', [ConversationController::class, 'index'])->name('co
 Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
 Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
 
+// Proxy for quick response templates (to avoid CORS)
+Route::get('/api/quick-responses', function () {
+    try {
+        $url = 'https://www.montanasky.net/MyAccount/TicketTracker/ajax/AI-Messages-Include.tpl?prepared_sms_text_area_id=message-input&is_include_media_tag=T';
+        $response = file_get_contents($url);
+        return response($response)->header('Content-Type', 'text/html');
+    } catch (\Exception $e) {
+        return response('Failed to load quick responses', 500);
+    }
+})->name('quick-responses');
+
 // Coming soon pages
 Route::get('/chatbot', function () {
     return view('coming-soon', ['feature' => 'Chatbot Manager']);

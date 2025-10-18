@@ -459,8 +459,8 @@
     </div>
 
     <script>
-        // Load quick response templates
-        fetch('https://www.montanasky.net/MyAccount/TicketTracker/ajax/AI-Messages-Include.tpl?prepared_sms_text_area_id=message-input&is_include_media_tag=T')
+        // Load quick response templates via our proxy (avoids CORS)
+        fetch('{{ route('quick-responses') }}')
             .then(response => response.text())
             .then(html => {
                 document.getElementById('quick-response-content').innerHTML = html;
