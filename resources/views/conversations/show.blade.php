@@ -580,6 +580,7 @@
         @csrf
         <input type="hidden" name="phone_number" id="archive-phone" value="{{ $phoneNumber }}">
         <input type="hidden" name="ids" id="archive-ids" value="">
+        <button type="submit" id="archive-submit-btn" style="display: none;">Submit</button>
     </form>
 
     <script>
@@ -803,15 +804,18 @@
                 return;
             }
             
-            // Use the permanent hidden form (Safari iOS compatible)
-            const form = document.getElementById('archive-form');
+            // Update the hidden form with selected IDs
             const idsInput = document.getElementById('archive-ids');
-            
-            // Update the IDs
             idsInput.value = ids.join(',');
             
-            // Submit the form (opens in new tab via target="_blank")
-            form.submit();
+            // Click the actual submit button (Safari iOS trusts button.click() more than form.submit())
+            const submitBtn = document.getElementById('archive-submit-btn');
+            
+            // Use setTimeout to ensure the click happens after this function returns
+            // This makes Safari iOS think it's a direct user action
+            setTimeout(() => {
+                submitBtn.click();
+            }, 0);
         }
     </script>
 </body>
