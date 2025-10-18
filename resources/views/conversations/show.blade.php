@@ -404,15 +404,45 @@
             messagesContainer.scrollTop = messagesContainer.scrollHeight;
         }
 
-        // Scroll to bottom on load (after all images are loaded)
-        window.addEventListener('load', () => {
+        // Check if we just refreshed (flag in sessionStorage)
+        if (sessionStorage.getItem('scrollToBottom') === 'true') {
+            sessionStorage.removeItem('scrollToBottom');
+            
+            // Wait for all images to load, then scroll multiple times
+            const images = document.querySelectorAll('img');
+            let loadedImages = 0;
+            
+            if (images.length === 0) {
+                // No images, scroll immediately
+                scrollToBottom();
+                setTimeout(scrollToBottom, 100);
+                setTimeout(scrollToBottom, 300);
+            } else {
+                images.forEach(img => {
+                    if (img.complete) {
+                        loadedImages++;
+                    } else {
+                        img.addEventListener('load', () => {
+                            loadedImages++;
+                            if (loadedImages === images.length) {
+                                scrollToBottom();
+                                setTimeout(scrollToBottom, 100);
+                            }
+                        });
+                    }
+                });
+                
+                // Also scroll with delays as backup
+                setTimeout(scrollToBottom, 100);
+                setTimeout(scrollToBottom, 300);
+                setTimeout(scrollToBottom, 500);
+            }
+        } else {
+            // Initial page load, scroll to bottom
             scrollToBottom();
-            // Extra scroll after a delay to catch any late-loading content
             setTimeout(scrollToBottom, 100);
-        });
-
-        // Also scroll immediately in case images are cached
-        scrollToBottom();
+            setTimeout(scrollToBottom, 300);
+        }
 
         // Auto-refresh every 5 seconds
         let lastMessageCount = {{ $messageCount }};
@@ -427,7 +457,8 @@
                 const newMessages = doc.querySelectorAll('.message');
                 
                 if (newMessages.length > lastMessageCount) {
-                    // New messages detected, reload page
+                    // New messages detected, set flag and reload page
+                    sessionStorage.setItem('scrollToBottom', 'true');
                     location.reload();
                 }
             } catch (error) {
