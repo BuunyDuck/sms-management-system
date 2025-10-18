@@ -421,7 +421,7 @@
         @endif
         <div class="timeframe-filter">
             <label for="timeframe">📅 Show messages from:</label>
-            <select id="timeframe" name="timeframe" onchange="window.location.href='{{ route('conversation.show', $phoneNumber) }}?timeframe=' + this.value">
+            <select id="timeframe" name="timeframe" onchange="window.location.href='{{ route('conversations.show', $phoneNumber) }}?timeframe=' + this.value">
                 <option value="24h" {{ $timeframe == '24h' ? 'selected' : '' }}>Last 24 Hours</option>
                 <option value="48h" {{ $timeframe == '48h' ? 'selected' : '' }}>Last 48 Hours</option>
                 <option value="week" {{ $timeframe == 'week' ? 'selected' : '' }}>This Week</option>
