@@ -182,8 +182,21 @@ class ConversationController extends Controller
             'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,pdf|max:5120',
         ]);
 
-        // Handle file upload if present
+        // Extract <media> tag from body if present (fallback if JavaScript didn't catch it)
+        $messageBody = $validated['body'];
         $mediaUrl = $validated['media_url'] ?? null;
+        
+        if (preg_match('/<media>(.*?)<\/media>/s', $messageBody, $matches)) {
+            // If no media_url was already set, use the one from the tag
+            if (empty($mediaUrl)) {
+                $mediaUrl = trim($matches[1]);
+            }
+            // Remove <media> tag from message body
+            $messageBody = preg_replace('/<media>.*?<\/media>/s', '', $messageBody);
+            $messageBody = trim($messageBody);
+        }
+
+        // Handle file upload if present (overrides everything)
         
         if ($request->hasFile('media_file')) {
             $file = $request->file('media_file');
@@ -203,10 +216,10 @@ class ConversationController extends Controller
             $options['statusCallback'] = route('webhook.twilio.status');
         }
 
-        // Send SMS
+        // Send SMS (use cleaned messageBody without <media> tags)
         $result = $this->twilioService->sendSms(
             $phoneNumber,
-            $validated['body'],
+            $messageBody,
             $options
         );
 
@@ -259,7 +272,7 @@ class ConversationController extends Controller
                     'TO' => $phoneNumber,
                     'toname' => $toName,  // Customer name
                     'custsku' => $custSku,
-                    'BODY' => $validated['body'],
+                    'BODY' => $messageBody,  // Use cleaned body without <media> tags
                     'MESSAGESID' => $result['message_sid'],
                     'ACCOUNTSID' => config('services.twilio.account_sid'),
                     'NUMMEDIA' => $numMedia,
@@ -506,8 +519,21 @@ class ConversationController extends Controller
             'send_to_support' => 'nullable|boolean',
         ]);
 
-        // Handle file upload if present
+        // Extract <media> tag from body if present (fallback if JavaScript didn't catch it)
+        $messageBody = $validated['body'];
         $mediaUrl = $validated['media_url'] ?? null;
+        
+        if (preg_match('/<media>(.*?)<\/media>/s', $messageBody, $matches)) {
+            // If no media_url was already set, use the one from the tag
+            if (empty($mediaUrl)) {
+                $mediaUrl = trim($matches[1]);
+            }
+            // Remove <media> tag from message body
+            $messageBody = preg_replace('/<media>.*?<\/media>/s', '', $messageBody);
+            $messageBody = trim($messageBody);
+        }
+
+        // Handle file upload if present
         
         if ($request->hasFile('media_file')) {
             $file = $request->file('media_file');
@@ -527,10 +553,10 @@ class ConversationController extends Controller
             $options['statusCallback'] = route('webhook.twilio.status');
         }
 
-        // Send SMS
+        // Send SMS (use cleaned messageBody without <media> tags)
         $result = $this->twilioService->sendSms(
             $phoneNumber,
-            $validated['body'],
+            $messageBody,
             $options
         );
 
@@ -590,7 +616,7 @@ class ConversationController extends Controller
                     'TO' => $phoneNumber,
                     'toname' => $toName,  // Customer name
                     'custsku' => $custSku,
-                    'BODY' => $validated['body'],
+                    'BODY' => $messageBody,  // Use cleaned body without <media> tags
                     'MESSAGESID' => $result['message_sid'],
                     'ACCOUNTSID' => config('services.twilio.account_sid'),
                     'NUMMEDIA' => $numMedia,

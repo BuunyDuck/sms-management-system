@@ -523,7 +523,12 @@
             <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif data-message-id="{{ $message->id }}">
                 <input type="checkbox" class="message-checkbox" value="{{ $message->id }}" style="margin-right: 8px; cursor: pointer;">
                 <div class="message-bubble">
-                    {!! nl2br(e($message->BODY)) !!}
+                    @php
+                        // Strip <media> tags from display
+                        $displayBody = preg_replace('/<media>.*?<\/media>/s', '', $message->BODY);
+                        $displayBody = trim($displayBody);
+                    @endphp
+                    {!! nl2br(e($displayBody)) !!}
                     
                     @if($message->NUMMEDIA > 0)
                         <div class="message-media">
