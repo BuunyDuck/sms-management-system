@@ -386,8 +386,8 @@
                     document.body.appendChild(tempDiv);
                     tempDiv.style.display = 'none';
                     
-                    // Now use jQuery on the actual DOM element
-                    const buttons = $(tempDiv).find('.ai-message-button');
+                    // Find buttons - they have onClick attributes
+                    const buttons = $(tempDiv).find('#ai-message-include-btns > div[onclick]');
                     console.log('Buttons found:', buttons.length);
                     
                     qrContainer.innerHTML = '';
@@ -398,10 +398,18 @@
                     }
                     
                     buttons.each(function() {
-                        const content = $(this).data('content') || '';
                         const title = $(this).text().trim();
+                        const onclickAttr = $(this).attr('onclick') || '';
                         
-                        console.log('Creating button:', title);
+                        // Extract the content ID from onClick: $('#basicemailsettings').data('content')
+                        const contentIdMatch = onclickAttr.match(/\$\('#([^']+)'\)\.data\('content'\)/);
+                        if (!contentIdMatch) return;
+                        
+                        const contentId = contentIdMatch[1];
+                        const contentElement = $(tempDiv).find('#' + contentId);
+                        const content = contentElement.data('content') || contentElement.text() || '';
+                        
+                        console.log('Creating button:', title, 'with content ID:', contentId);
                         
                         const newBtn = document.createElement('button');
                         newBtn.className = 'qr-button';
