@@ -65,126 +65,85 @@
         }
         
         .compose-footer {
-            background: #f7f7f8;
-            border-top: 1px solid #c6c6c8;
-            padding: 12px 16px;
+            background: white;
+            padding: 15px 20px;
+            border-top: 1px solid #e5e5ea;
+            flex-shrink: 0;
         }
         
-        .footer-row {
+        .compose-form {
             display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 8px;
-        }
-        
-        .quick-responses-link {
-            color: #007aff;
-            text-decoration: none;
-            font-size: 15px;
-            cursor: pointer;
-        }
-        
-        .send-to-support-btn {
-            margin-left: auto;
-            padding: 8px 16px;
-            border-radius: 20px;
-            font-size: 15px;
-            font-weight: 500;
-            border: none;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-        
-        .send-to-support-btn.active {
-            background: #34c759;
-            color: white;
-        }
-        
-        .send-to-support-btn.inactive {
-            background: #007aff;
-            color: white;
-        }
-        
-        .message-input-row {
-            display: flex;
+            gap: 10px;
             align-items: flex-end;
+        }
+        
+        .compose-input-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
             gap: 8px;
         }
         
-        .message-input {
-            flex: 1;
+        .compose-input {
+            width: 100%;
+            padding: 10px 15px;
             border: 1px solid #d1d1d6;
             border-radius: 20px;
-            padding: 10px 16px;
-            font-size: 17px;
-            min-height: 36px;
-            max-height: 120px;
+            font-size: 14px;
+            font-family: inherit;
             resize: none;
+            max-height: 100px;
+            min-height: 40px;
         }
         
-        .message-input:focus {
+        .compose-input:focus {
             outline: none;
             border-color: #007aff;
         }
         
-        .attach-file-btn {
-            background: #007aff;
-            color: white;
-            padding: 8px 16px;
-            border-radius: 8px;
-            border: none;
-            font-size: 15px;
-            cursor: pointer;
-            white-space: nowrap;
-        }
-        
         .media-url-input {
             width: 100%;
-            border: 1px solid #d1d1d6;
-            border-radius: 8px;
             padding: 8px 12px;
-            font-size: 15px;
-            margin-top: 8px;
+            border: 1px solid #d1d1d6;
+            border-radius: 15px;
+            font-size: 12px;
+            font-family: inherit;
         }
         
-        .send-btn {
-            background: #007aff;
-            color: white;
-            width: 36px;
-            height: 36px;
+        .media-url-input:focus {
+            outline: none;
+            border-color: #007aff;
+        }
+        
+        .send-button {
+            width: 40px;
+            height: 40px;
             border-radius: 50%;
+            background: #007aff;
             border: none;
+            color: white;
+            font-size: 18px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             flex-shrink: 0;
+            transition: all 0.2s;
         }
         
-        .send-btn:disabled {
+        .send-button:hover {
+            background: #0051d5;
+        }
+        
+        .send-button:disabled {
             background: #c6c6c8;
             cursor: not-allowed;
         }
         
         .char-count {
-            font-size: 13px;
+            font-size: 11px;
             color: #8e8e93;
             text-align: right;
-            margin-top: 4px;
-        }
-        
-        .quick-responses-container {
-            display: none;
-            margin-top: 12px;
-            padding: 12px;
-            background: white;
-            border-radius: 12px;
-            max-height: 300px;
-            overflow-y: auto;
-        }
-        
-        .quick-responses-container.visible {
-            display: block;
         }
         
         /* Quick Response Buttons - Match conversation page styling */
@@ -276,57 +235,75 @@
         
         <!-- Footer (Compose Area) -->
         <div class="compose-footer">
-            <form id="compose-form" method="POST" action="{{ route('conversations.compose.send') }}" enctype="multipart/form-data">
+            <!-- Quick Responses Container -->
+            <div class="quick-responses-container" id="quick-responses" style="display: none; padding: 10px; background: #f8f8f8; border-bottom: 1px solid #d1d1d6; max-height: 200px; overflow-y: auto;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                    <strong style="font-size: 13px; color: #333;">📋 Quick Responses</strong>
+                    <a href="#" onclick="document.getElementById('quick-responses').style.display='none'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px;">Hide</a>
+                </div>
+                <div id="quick-response-content" style="font-size: 12px;">
+                    Loading...
+                </div>
+            </div>
+            
+            <form id="compose-form" method="POST" action="{{ route('conversations.compose.send') }}" enctype="multipart/form-data" class="compose-form">
                 @csrf
                 <input type="hidden" name="to" id="to-field">
+                <input type="hidden" name="send_to_support" id="send-to-support-field" value="0">
+                <input type="file" id="file-input" name="media_file" accept="image/*,video/*" style="display: none;">
                 
-                <!-- Quick Responses & Send to Support -->
-                <div class="footer-row">
-                    <a href="#" class="quick-responses-link" id="toggle-qr">⚡ Quick Responses</a>
-                    <button type="button" 
-                            class="send-to-support-btn inactive" 
-                            id="send-to-support-toggle">
-                        📧 Send to Support
-                    </button>
-                    <input type="hidden" name="send_to_support" id="send-to-support-field" value="0">
-                </div>
-                
-                <!-- Quick Responses Container -->
-                <div class="quick-responses-container" id="quick-responses"></div>
-                
-                <!-- Message Input Row -->
-                <div class="message-input-row">
-                    <button type="button" class="attach-file-btn" onclick="document.getElementById('file-input').click()">
-                        Attach File
-                    </button>
-                    <input type="file" id="file-input" name="media_file" accept="image/*,video/*" style="display: none;">
+                <div class="compose-input-wrapper">
+                    <!-- Quick Responses, Attach File, Send to Support Row -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;">
+                        <div style="display: flex; gap: 12px; align-items: center;">
+                            <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
+                            <a href="#" onclick="document.getElementById('file-input').click(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">📎 Attach File</a>
+                        </div>
+                        <button type="button" id="send-to-support-toggle" onclick="toggleSendToSupport()" style="
+                            background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
+                            color: white;
+                            border: none;
+                            padding: 8px 16px;
+                            border-radius: 20px;
+                            font-size: 13px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.3s;
+                            display: flex;
+                            align-items: center;
+                            gap: 6px;
+                            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+                        ">
+                            <span id="support-icon">📧</span>
+                            <span>Send to Support</span>
+                            <span id="support-check" style="display: none; font-size: 16px;">✓</span>
+                        </button>
+                    </div>
                     
+                    <!-- Message Textarea -->
                     <textarea id="message-input" 
                               name="body" 
-                              class="message-input" 
+                              class="compose-input" 
                               placeholder="iMessage"
                               rows="1"
                               maxlength="1600"
                               required></textarea>
                     
-                    <button type="submit" class="send-btn" id="send-btn" disabled>
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
-                            <path d="M2 12L22 2L12 22L10 14L2 12Z" fill="white"/>
-                        </svg>
-                    </button>
+                    <!-- Media URL Input -->
+                    <input type="url" 
+                           name="media_url" 
+                           id="media-url" 
+                           class="media-url-input" 
+                           placeholder="Optional: Media URL (https://...)">
+                    
+                    <!-- Character Count -->
+                    <div class="char-count" id="char-count">0 / 1600</div>
                 </div>
                 
-                <!-- Media URL Input -->
-                <input type="url" 
-                       name="media_url" 
-                       id="media-url" 
-                       class="media-url-input" 
-                       placeholder="Optional: Media URL (https://...)">
-                
-                <!-- Character Count -->
-                <div class="char-count">
-                    <span id="char-count">0</span> / 1600
-                </div>
+                <!-- Send Button -->
+                <button type="submit" class="send-button" id="send-btn" disabled>
+                    ↑
+                </button>
             </form>
         </div>
     </div>
@@ -372,101 +349,95 @@
             updateSendButton();
         }
         
-        // Send to Support toggle
-        const sendToSupportBtn = document.getElementById('send-to-support-toggle');
-        const sendToSupportField = document.getElementById('send-to-support-field');
-        let sendToSupport = false;
+        // Send to Support toggle (match conversation page)
+        let sendToSupportEnabled = false;
         
-        sendToSupportBtn.addEventListener('click', function() {
-            sendToSupport = !sendToSupport;
+        function toggleSendToSupport() {
+            sendToSupportEnabled = !sendToSupportEnabled;
             
-            if (sendToSupport) {
-                this.classList.remove('inactive');
-                this.classList.add('active');
-                this.innerHTML = '✓ Send to Support';
-                sendToSupportField.value = '1';
-            } else {
-                this.classList.remove('active');
-                this.classList.add('inactive');
-                this.innerHTML = '📧 Send to Support';
-                sendToSupportField.value = '0';
-            }
-        });
-        
-        // Quick Responses
-        const toggleQR = document.getElementById('toggle-qr');
-        const qrContainer = document.getElementById('quick-responses');
-        
-        toggleQR.addEventListener('click', function(e) {
-            e.preventDefault();
+            const btn = document.getElementById('send-to-support-toggle');
+            const icon = document.getElementById('support-icon');
+            const check = document.getElementById('support-check');
+            const field = document.getElementById('send-to-support-field');
             
-            if (qrContainer.classList.contains('visible')) {
-                qrContainer.classList.remove('visible');
+            if (sendToSupportEnabled) {
+                // Active state - show checkmark
+                btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
+                btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
+                icon.style.display = 'none';
+                check.style.display = 'inline';
+                field.value = '1';
             } else {
-                qrContainer.classList.add('visible');
-                
-                // Load quick responses if not already loaded
-                if (qrContainer.innerHTML === '') {
-                    loadQuickResponses();
-                }
+                // Inactive state - show email icon
+                btn.style.background = 'linear-gradient(135deg, #007aff 0%, #0051d5 100%)';
+                btn.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
+                icon.style.display = 'inline';
+                check.style.display = 'none';
+                field.value = '0';
             }
-        });
-        
-        function loadQuickResponses() {
-            // Use the SAME approach as conversation page - just load HTML directly!
-            fetch('/api/quick-responses')
-                .then(response => response.text())
-                .then(html => {
-                    qrContainer.innerHTML = html;
-                    
-                    // Fix button clicks to work with our textarea and handle <media> tags
-                    document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
-                        // Extract the ID from the onclick: $('#ID').data('content')
-                        const onclickAttr = btn.getAttribute('onclick');
-                        const contentIdMatch = onclickAttr.match(/\$\('#(\w+)'\)\.data\('content'\)/);
-                        
-                        if (!contentIdMatch) return; // Skip if we can't parse it
-                        
-                        const contentId = contentIdMatch[1];
-                        
-                        // Replace the onclick with our custom handler
-                        btn.onclick = function(e) {
-                            e.preventDefault();
-                            
-                            // Get content from the hidden div
-                            const hiddenDiv = document.getElementById(contentId);
-                            if (hiddenDiv) {
-                                let content = hiddenDiv.getAttribute('data-content');
-                                
-                                // Check for <media> tag
-                                const mediaMatch = content.match(/<media>(.*?)<\/media>/);
-                                
-                                if (mediaMatch) {
-                                    // Extract media URL
-                                    const mediaUrl = mediaMatch[1];
-                                    
-                                    // Remove <media> tag from message
-                                    content = content.replace(/<media>.*?<\/media>/g, '').trim();
-                                    
-                                    // Populate media URL field
-                                    document.getElementById('media-url').value = mediaUrl;
-                                }
-                                
-                                // Populate message textarea
-                                messageInput.value = content;
-                                messageInput.dispatchEvent(new Event('input'));
-                                
-                                // Hide quick responses
-                                qrContainer.classList.remove('visible');
-                            }
-                        };
-                    });
-                })
-                .catch(error => {
-                    console.error('Failed to load quick responses:', error);
-                    qrContainer.innerHTML = '<p style="color: #ff3b30; padding: 12px;">Failed to load quick responses</p>';
-                });
         }
+        
+        // Load Quick Responses on page load (match conversation page approach)
+        fetch('/api/quick-responses')
+            .then(response => response.text())
+            .then(html => {
+                document.getElementById('quick-response-content').innerHTML = html;
+                
+                // Fix button clicks to work with our textarea and handle <media> tags
+                document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
+                    // Extract the ID from the onclick: $('#ID').data('content')
+                    const onclickAttr = btn.getAttribute('onclick');
+                    const contentIdMatch = onclickAttr.match(/\$\('#(\w+)'\)\.data\('content'\)/);
+                    
+                    if (!contentIdMatch) return; // Skip if we can't parse it
+                    
+                    const contentId = contentIdMatch[1];
+                    
+                    // Replace the onclick with our custom handler
+                    btn.onclick = function(e) {
+                        e.preventDefault();
+                        
+                        // Get content from the hidden div
+                        const hiddenDiv = document.getElementById(contentId);
+                        if (hiddenDiv) {
+                            let content = hiddenDiv.getAttribute('data-content');
+                            
+                            // Check for <media> tag
+                            const mediaMatch = content.match(/<media>(.*?)<\/media>/);
+                            
+                            if (mediaMatch) {
+                                // Extract media URL
+                                const mediaUrl = mediaMatch[1];
+                                
+                                // Remove <media> tag from message
+                                content = content.replace(/<media>.*?<\/media>/g, '').trim();
+                                
+                                // Populate media URL field
+                                document.getElementById('media-url').value = mediaUrl;
+                            }
+                            
+                            // Populate message textarea
+                            messageInput.value = content;
+                            messageInput.style.height = 'auto';
+                            messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+                            
+                            // Update character count
+                            document.getElementById('char-count').textContent = content.length + ' / 1600';
+                            
+                            // Enable send button
+                            updateSendButton();
+                            
+                            // Hide quick responses
+                            document.getElementById('quick-responses').style.display = 'none';
+                        }
+                        return false;
+                    };
+                });
+            })
+            .catch(error => {
+                document.getElementById('quick-response-content').innerHTML = '<span style="color: #999;">Failed to load quick responses</span>';
+                console.error('Error loading quick responses:', error);
+            });
         
         // File input handling
         document.getElementById('file-input').addEventListener('change', function(e) {
