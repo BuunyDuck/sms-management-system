@@ -446,5 +446,153 @@ class ConversationController extends Controller
         
         return $number;
     }
+
+    /**
+     * Show compose new message page
+     */
+    public function compose()
+    {
+        return view('conversations.compose');
+    }
+
+    /**
+     * Send message from compose page and redirect to conversation
+     */
+    public function composeSend(Request $request)
+    {
+        // Normalize phone number to E.164 format
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $request->input('to'));
+        if (!str_starts_with($phoneNumber, '+')) {
+            $phoneNumber = ltrim($phoneNumber, '1');
+            $phoneNumber = '+1' . $phoneNumber;
+        }
+        
+        // If it starts with + but missing country code
+        if ($phoneNumber === '+' . ltrim($phoneNumber, '+') && strlen(ltrim($phoneNumber, '+')) === 10) {
+            $phoneNumber = '+1' . ltrim($phoneNumber, '+');
+        }
+
+        $validated = $request->validate([
+            'to' => 'required|string',
+            'body' => 'required|string|max:1600',
+            'media_url' => 'nullable|url',
+            'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,pdf|max:5120',
+            'send_to_support' => 'nullable|boolean',
+        ]);
+
+        // Handle file upload if present
+        $mediaUrl = $validated['media_url'] ?? null;
+        
+        if ($request->hasFile('media_file')) {
+            $file = $request->file('media_file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('media'), $filename);
+            $mediaUrl = url('/media/' . $filename);
+        }
+
+        // Prepare options
+        $options = [
+            'mediaUrl' => $mediaUrl,
+        ];
+
+        // Only add statusCallback if not in local environment
+        $appUrl = config('app.url');
+        if (!str_contains($appUrl, 'localhost') && !str_contains($appUrl, '127.0.0.1')) {
+            $options['statusCallback'] = route('webhook.twilio.status');
+        }
+
+        // Send SMS
+        $result = $this->twilioService->sendSms(
+            $phoneNumber,
+            $validated['body'],
+            $options
+        );
+
+        // Save to database if successful
+        if ($result['success']) {
+            try {
+                // Prepare media data
+                $numMedia = $mediaUrl ? 1 : 0;
+                $mediaUrlList = $mediaUrl ? $mediaUrl : '';
+                $mediaTypeList = '';
+                
+                // Try to determine content type from URL
+                if ($mediaUrl) {
+                    $extension = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+                    $mediaTypeList = match($extension) {
+                        'jpg', 'jpeg' => 'image/jpeg',
+                        'png' => 'image/png',
+                        'gif' => 'image/gif',
+                        'mp4' => 'video/mp4',
+                        'pdf' => 'application/pdf',
+                        default => 'application/octet-stream',
+                    };
+                }
+
+                // Get customer name for toname
+                $customerInfo = \DB::connection('mysql')
+                    ->select("
+                        SELECT c.NAME as customer_name, c.SKU as customer_sku
+                        FROM cat_customer_to_phone AS p
+                        JOIN db_297_netcustomers AS c ON p.customer_sku = c.SKU
+                        WHERE p.phone = ?
+                        ORDER BY p.is_primary_record_for_cat_sms DESC
+                        LIMIT 1
+                    ", [ltrim($phoneNumber, '+1')]);
+                
+                $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
+                $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
+
+                // Handle "Send to Support" preference
+                $sendToSupport = $validated['send_to_support'] ?? false;
+                $repliesToSupport = $sendToSupport ? 1 : 0;
+                
+                // Save preference if set
+                if ($sendToSupport) {
+                    \DB::table('conversation_preferences')->updateOrInsert(
+                        ['phone_number' => $phoneNumber],
+                        [
+                            'send_to_support' => true,
+                            'updated_at' => now(),
+                        ]
+                    );
+                }
+
+                SmsMessage::create([
+                    'FROM' => config('services.twilio.from_number'),
+                    'fromname' => auth()->user()->name,  // Agent name
+                    'TO' => $phoneNumber,
+                    'toname' => $toName,  // Customer name
+                    'custsku' => $custSku,
+                    'BODY' => $validated['body'],
+                    'MESSAGESID' => $result['message_sid'],
+                    'ACCOUNTSID' => config('services.twilio.account_sid'),
+                    'NUMMEDIA' => $numMedia,
+                    'MESSAGESTATUS' => $result['status'],
+                    'mediaurllist' => $mediaUrlList,
+                    'mediatypelist' => $mediaTypeList,
+                    'replies_to_support' => $repliesToSupport,
+                    'user_id' => auth()->id(),
+                ]);
+
+                Log::info('✅ Message sent from compose page', ['message_sid' => $result['message_sid']]);
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to save message from compose page', [
+                    'error' => $e->getMessage(),
+                    'message_sid' => $result['message_sid'] ?? null,
+                ]);
+                // Don't fail the redirect if database save fails
+            }
+
+            // Redirect to the conversation
+            return redirect()
+                ->route('conversations.show', ['phoneNumber' => ltrim($phoneNumber, '+')])
+                ->with('success', '✅ Message sent successfully!');
+        }
+
+        return back()
+            ->withInput()
+            ->with('error', '❌ Failed to send: ' . ($result['error'] ?? 'Unknown error'));
+    }
 }
 

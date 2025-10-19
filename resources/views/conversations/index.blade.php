@@ -286,7 +286,7 @@
             <p style="margin-top: 10px; font-size: 14px; opacity: 0.9;">📅 Showing conversations from the last 30 days (top 50)</p>
             <div class="header-actions">
                 <a href="{{ url('/') }}" class="btn btn-secondary">← Home</a>
-                <a href="{{ url('/send') }}" class="btn btn-primary">+ New Message</a>
+                <a href="{{ route('conversations.compose') }}" class="btn btn-primary">+ New Message</a>
             </div>
             <div class="user-info">
                 <div>

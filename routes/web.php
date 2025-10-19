@@ -48,6 +48,8 @@ Route::middleware('auth')->group(function () {
     
     // Conversation routes (protected)
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/conversations/compose', [ConversationController::class, 'compose'])->name('conversations.compose');
+    Route::post('/conversations/compose/send', [ConversationController::class, 'composeSend'])->name('conversations.compose.send');
     Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
     Route::post('/conversation/{phoneNumber}/toggle-support', [ConversationController::class, 'toggleSupport'])->name('conversations.toggle-support');
