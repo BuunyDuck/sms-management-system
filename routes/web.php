@@ -70,5 +70,9 @@ Route::get('/api/quick-responses', function () {
     }
 })->name('quick-responses');
 
+// Twilio Webhooks (public - no auth, no CSRF)
+Route::post('/webhook/twilio', [\App\Http\Controllers\API\WebhookController::class, 'receiveSms'])->name('webhook.twilio');
+Route::post('/webhook/twilio/status', [\App\Http\Controllers\API\WebhookController::class, 'statusCallback'])->name('webhook.twilio.status');
+
 require __DIR__.'/auth.php';
 require __DIR__.'/api.php';
