@@ -130,16 +130,25 @@ class TwilioService
     public function parseIncomingMessage(array $payload): array
     {
         return [
-            'message_sid' => $payload['MessageSid'] ?? null,
+            'message_sid' => $payload['MessageSid'] ?? $payload['SmsSid'] ?? null,
+            'account_sid' => $payload['AccountSid'] ?? null,
+            'messaging_service_sid' => $payload['MessagingServiceSid'] ?? null,
             'from' => $payload['From'] ?? null,
             'to' => $payload['To'] ?? null,
             'body' => $payload['Body'] ?? '',
             'num_media' => (int)($payload['NumMedia'] ?? 0),
+            'num_segments' => (int)($payload['NumSegments'] ?? 1),
+            'status' => $payload['SmsStatus'] ?? 'received',
+            'api_version' => $payload['ApiVersion'] ?? null,
             'media_urls' => $this->extractMediaUrls($payload),
             'from_city' => $payload['FromCity'] ?? null,
             'from_state' => $payload['FromState'] ?? null,
             'from_zip' => $payload['FromZip'] ?? null,
             'from_country' => $payload['FromCountry'] ?? null,
+            'to_city' => $payload['ToCity'] ?? null,
+            'to_state' => $payload['ToState'] ?? null,
+            'to_zip' => $payload['ToZip'] ?? null,
+            'to_country' => $payload['ToCountry'] ?? null,
         ];
     }
 
