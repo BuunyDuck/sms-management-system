@@ -247,29 +247,32 @@ class WebhookController extends Controller
         $appUrl = config('app.url');
         $conversationUrl = $appUrl . '/conversation/' . ltrim($message['from'], '+');
 
-        $html = "<html><body style='font-family: Arial, sans-serif;'>";
-        $html .= "<h3 style='color: #007aff;'>📱 New SMS Message</h3>";
-        $html .= "<strong>From:</strong> {$fromNumber} {$customerName}<br>";
-        $html .= "<strong>To:</strong> {$toNumber}<br>";
-        $html .= "<strong>Agent:</strong> {$agentName}<br><br>";
-        $html .= "<strong>Message:</strong><br>";
-        $html .= "<p style='background: #f5f5f5; padding: 12px; border-radius: 8px;'>" . htmlspecialchars($message['body']) . "</p>";
+        $html = '<!DOCTYPE html>';
+        $html .= '<html>';
+        $html .= '<head><meta charset="UTF-8"></head>';
+        $html .= '<body style="font-family: Arial, sans-serif; padding: 20px;">';
+        $html .= '<h3 style="color: #007aff;">📱 New SMS Message</h3>';
+        $html .= '<p><strong>From:</strong> ' . $fromNumber . ' ' . $customerName . '</p>';
+        $html .= '<p><strong>To:</strong> ' . $toNumber . '</p>';
+        $html .= '<p><strong>Agent:</strong> ' . $agentName . '</p>';
+        $html .= '<p><strong>Message:</strong></p>';
+        $html .= '<div style="background: #f5f5f5; padding: 12px; border-radius: 8px; margin-bottom: 15px;">' . htmlspecialchars($message['body']) . '</div>';
 
         // Add media attachments if any
         if (!empty($message['media_urls'])) {
-            $html .= "<strong>📎 Media Attachments:</strong><br>";
+            $html .= '<p><strong>📎 Media Attachments:</strong></p>';
+            $html .= '<ul>';
             foreach ($message['media_urls'] as $media) {
-                $html .= "- <a href=\"{$media['url']}\">{$media['content_type']}</a><br>";
+                $html .= '<li><a href="' . $media['url'] . '">' . $media['content_type'] . '</a></li>';
             }
-            $html .= "<br>";
+            $html .= '</ul>';
         }
 
-        // Big prominent link to view conversation
-        $html .= "<br>";
-        $html .= "<a href=\"{$conversationUrl}\" style='display: inline-block; background: #007aff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;'>View Full Conversation →</a>";
-        $html .= "<br><br>";
-        $html .= "<small style='color: #666;'>Click the button above to see the complete conversation history and reply.</small>";
-        $html .= "</body></html>";
+        // Simple text link instead of button
+        $html .= '<hr style="margin: 20px 0; border: none; border-top: 1px solid #ddd;">';
+        $html .= '<p><a href="' . $conversationUrl . '" style="color: #007aff; text-decoration: none; font-weight: bold;">SMS Conversation</a></p>';
+        $html .= '</body>';
+        $html .= '</html>';
         
         return $html;
     }
