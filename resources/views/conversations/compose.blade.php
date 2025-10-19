@@ -238,12 +238,32 @@
             <h1>New SMS-MMS Message</h1>
         </div>
         
+        <!-- Flash Messages -->
+        @if(session('info'))
+            <div style="background: #007aff; color: white; padding: 12px 16px; text-align: center; font-size: 15px;">
+                {{ session('info') }}
+            </div>
+        @endif
+        
+        @if(session('success'))
+            <div style="background: #34c759; color: white; padding: 12px 16px; text-align: center; font-size: 15px;">
+                {{ session('success') }}
+            </div>
+        @endif
+        
+        @if(session('error'))
+            <div style="background: #ff3b30; color: white; padding: 12px 16px; text-align: center; font-size: 15px;">
+                {{ session('error') }}
+            </div>
+        @endif
+        
         <!-- Phone Number Input -->
         <div class="phone-input-container">
             <input type="tel" 
                    id="phone-number" 
                    class="phone-input" 
                    placeholder="Enter phone number (+1406...)"
+                   value="{{ session('prefill_number', old('to')) }}"
                    autocomplete="tel">
         </div>
         
@@ -344,6 +364,12 @@
             } else {
                 sendBtn.disabled = true;
             }
+        }
+        
+        // Initialize: If phone number is pre-filled, populate hidden field
+        if (phoneInput.value) {
+            toField.value = phoneInput.value;
+            updateSendButton();
         }
         
         // Send to Support toggle

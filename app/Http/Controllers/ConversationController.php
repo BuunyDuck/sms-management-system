@@ -131,6 +131,14 @@ class ConversationController extends Controller
         // Get total message count (all time)
         $totalMessageCount = SmsMessage::forNumber($phoneNumber)->count();
 
+        // If no messages exist at all, redirect to compose with this number
+        if ($totalMessageCount === 0) {
+            return redirect()
+                ->route('conversations.compose')
+                ->with('info', '📱 No conversation found for ' . $formattedNumber . '. Start a new one!')
+                ->with('prefill_number', $phoneNumber);
+        }
+
         // Get customer information (fetch from all messages, not just filtered)
         $firstMessage = SmsMessage::forNumber($phoneNumber)->oldest()->first();
         $customerInfo = $firstMessage?->getCustomerInfo();
