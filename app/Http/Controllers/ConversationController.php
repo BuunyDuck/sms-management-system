@@ -91,9 +91,17 @@ class ConversationController extends Controller
      */
     public function show(Request $request, string $phoneNumber)
     {
+        // Normalize phone number: Remove dashes, spaces, parentheses, dots
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber);
+        
         // Ensure phone number is in E.164 format
         if (!str_starts_with($phoneNumber, '+')) {
-            $phoneNumber = '+' . $phoneNumber;
+            // If it's 10 digits, assume US (+1)
+            if (strlen($phoneNumber) === 10) {
+                $phoneNumber = '+1' . $phoneNumber;
+            } else {
+                $phoneNumber = '+' . $phoneNumber;
+            }
         }
 
         // Get timeframe filter (default to 24 hours)
