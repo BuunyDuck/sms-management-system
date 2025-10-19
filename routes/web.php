@@ -50,6 +50,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
     Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
     Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
+    Route::post('/conversation/{phoneNumber}/toggle-support', [ConversationController::class, 'toggleSupport'])->name('conversations.toggle-support');
     Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
     
     // SMS Test Page (protected)

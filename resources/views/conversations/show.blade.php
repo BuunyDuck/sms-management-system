@@ -549,8 +549,27 @@
         <form method="POST" action="{{ route('conversations.send', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}" class="compose-form">
             @csrf
             <div class="compose-input-wrapper">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;">
                     <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
+                    <button type="button" id="send-to-support-btn" onclick="toggleSendToSupport()" style="
+                        background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
+                        color: white;
+                        border: none;
+                        padding: 8px 16px;
+                        border-radius: 20px;
+                        font-size: 13px;
+                        font-weight: 600;
+                        cursor: pointer;
+                        transition: all 0.3s;
+                        display: flex;
+                        align-items: center;
+                        gap: 6px;
+                        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
+                    ">
+                        <span id="support-icon">📧</span>
+                        <span>Send to Support</span>
+                        <span id="support-check" style="display: none; font-size: 16px;">✓</span>
+                    </button>
                 </div>
                 <textarea 
                     name="body" 
@@ -816,6 +835,69 @@
             setTimeout(() => {
                 submitBtn.click();
             }, 0);
+        }
+
+        // Send to Support toggle functionality (use server value)
+        let sendToSupportEnabled = {{ $sendToSupport ? 'true' : 'false' }};
+        
+        function toggleSendToSupport() {
+            sendToSupportEnabled = !sendToSupportEnabled;
+            
+            const btn = document.getElementById('send-to-support-btn');
+            const icon = document.getElementById('support-icon');
+            const check = document.getElementById('support-check');
+            
+            if (sendToSupportEnabled) {
+                // Active state - show checkmark
+                btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
+                btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
+                icon.style.display = 'none';
+                check.style.display = 'inline';
+                
+                // Save to localStorage
+                localStorage.setItem('sendToSupport_{{ $phoneNumber }}', 'true');
+                
+                // Save to server
+                fetch('{{ route('conversations.toggle-support', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ enabled: true })
+                });
+            } else {
+                // Inactive state - show icon
+                btn.style.background = 'linear-gradient(135deg, #007aff 0%, #0051d5 100%)';
+                btn.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
+                icon.style.display = 'inline';
+                check.style.display = 'none';
+                
+                // Save to localStorage
+                localStorage.setItem('sendToSupport_{{ $phoneNumber }}', 'false');
+                
+                // Save to server
+                fetch('{{ route('conversations.toggle-support', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify({ enabled: false })
+                });
+            }
+        }
+        
+        // Initialize button state on page load
+        if (sendToSupportEnabled) {
+            const btn = document.getElementById('send-to-support-btn');
+            const icon = document.getElementById('support-icon');
+            const check = document.getElementById('support-check');
+            
+            btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
+            btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
+            icon.style.display = 'none';
+            check.style.display = 'inline';
         }
     </script>
 </body>

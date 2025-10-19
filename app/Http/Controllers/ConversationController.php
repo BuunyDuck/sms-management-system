@@ -135,7 +135,12 @@ class ConversationController extends Controller
         $firstMessage = SmsMessage::forNumber($phoneNumber)->oldest()->first();
         $customerInfo = $firstMessage?->getCustomerInfo();
 
-        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'totalMessageCount', 'customerInfo', 'timeframe'));
+        // Get "Send to Support" preference
+        $sendToSupport = DB::table('conversation_preferences')
+            ->where('phone_number', $phoneNumber)
+            ->value('send_to_support') ?? false;
+
+        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'totalMessageCount', 'customerInfo', 'timeframe', 'sendToSupport'));
     }
 
     /**
@@ -382,6 +387,41 @@ class ConversationController extends Controller
             Log::error('Failed to check existing ticket', ['error' => $e->getMessage()]);
             return null;
         }
+    }
+
+    /**
+     * Toggle "Send to Support" email forwarding for a conversation
+     */
+    public function toggleSupport(Request $request, string $phoneNumber)
+    {
+        // Normalize phone number
+        $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber);
+        if (!str_starts_with($phoneNumber, '+')) {
+            $phoneNumber = '+1' . ltrim($phoneNumber, '1');
+        }
+
+        $enabled = $request->input('enabled', false);
+
+        // Upsert the preference
+        DB::table('conversation_preferences')->updateOrInsert(
+            ['phone_number' => $phoneNumber],
+            [
+                'send_to_support' => $enabled,
+                'updated_at' => now(),
+                'created_at' => DB::raw('COALESCE(created_at, NOW())')
+            ]
+        );
+
+        Log::info('Send to Support toggled', [
+            'phone' => $phoneNumber,
+            'enabled' => $enabled,
+            'user' => auth()->user()->name
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'enabled' => $enabled
+        ]);
     }
 
     /**
