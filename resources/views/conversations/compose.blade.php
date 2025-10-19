@@ -370,18 +370,38 @@
         });
         
         function loadQuickResponses() {
+            console.log('Loading Quick Responses...');
+            
             fetch('/api/quick-responses')
-                .then(response => response.text())
+                .then(response => {
+                    console.log('Response status:', response.status);
+                    return response.text();
+                })
                 .then(html => {
-                    // Parse and convert to buttons
-                    const parser = new DOMParser();
-                    const doc = parser.parseFromString(html, 'text/html');
-                    const buttons = doc.querySelectorAll('.ai-message-button');
+                    console.log('HTML received, length:', html.length);
+                    
+                    // Create temporary container to use jQuery
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = html;
+                    document.body.appendChild(tempDiv);
+                    tempDiv.style.display = 'none';
+                    
+                    // Now use jQuery on the actual DOM element
+                    const buttons = $(tempDiv).find('.ai-message-button');
+                    console.log('Buttons found:', buttons.length);
                     
                     qrContainer.innerHTML = '';
-                    buttons.forEach(button => {
-                        const content = button.getAttribute('data-content') || '';
-                        const title = button.textContent.trim();
+                    
+                    if (buttons.length === 0) {
+                        qrContainer.innerHTML = '<p style="color: #f59e0b; padding: 12px;">No quick responses found</p>';
+                        return;
+                    }
+                    
+                    buttons.each(function() {
+                        const content = $(this).data('content') || '';
+                        const title = $(this).text().trim();
+                        
+                        console.log('Creating button:', title);
                         
                         const newBtn = document.createElement('button');
                         newBtn.className = 'qr-button';
@@ -406,10 +426,13 @@
                         
                         qrContainer.appendChild(newBtn);
                     });
+                    
+                    // Remove temporary div
+                    document.body.removeChild(tempDiv);
                 })
                 .catch(error => {
                     console.error('Failed to load quick responses:', error);
-                    qrContainer.innerHTML = '<p style="color: #ff3b30; padding: 12px;">Failed to load quick responses</p>';
+                    qrContainer.innerHTML = '<p style="color: #ff3b30; padding: 12px;">Error: ' + error.message + '</p>';
                 });
         }
         
