@@ -562,11 +562,15 @@
             </div>
         </div>
         
-        <form method="POST" action="{{ route('conversations.send', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}" class="compose-form">
+        <form method="POST" action="{{ route('conversations.send', ['phoneNumber' => ltrim($phoneNumber, '+')]) }}" class="compose-form" enctype="multipart/form-data">
             @csrf
+            <input type="file" id="file-input-conversation" name="media_file" accept="image/*,video/*" style="display: none;">
             <div class="compose-input-wrapper">
                 <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;">
-                    <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
+                        <a href="#" onclick="document.getElementById('file-input-conversation').click(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">📎 Attach File</a>
+                    </div>
                     <button type="button" id="send-to-support-btn" onclick="toggleSendToSupport()" style="
                         background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
                         color: white;
@@ -915,6 +919,49 @@
             icon.style.display = 'none';
             check.style.display = 'inline';
         }
+
+        // File input handler
+        const fileInputConversation = document.getElementById('file-input-conversation');
+        const mediaUrlInput = document.getElementById('media-url-input');
+        
+        fileInputConversation.addEventListener('change', function() {
+            const file = this.files[0];
+            if (file) {
+                // Show selected file name
+                const fileName = file.name;
+                const fileSize = (file.size / 1024 / 1024).toFixed(2); // MB
+                
+                // Update the Quick Responses link to show file name
+                const attachLink = document.querySelector('a[href="#"][onclick*="file-input-conversation"]');
+                if (attachLink) {
+                    attachLink.innerHTML = '📎 ' + fileName + ' (' + fileSize + ' MB)';
+                    attachLink.style.color = '#34c759'; // Green to show success
+                }
+                
+                // Disable media URL input when file is selected
+                if (mediaUrlInput) {
+                    mediaUrlInput.disabled = true;
+                    mediaUrlInput.placeholder = 'File selected - URL disabled';
+                }
+            }
+        });
+        
+        // Reset file input when form is submitted successfully
+        document.querySelector('.compose-form').addEventListener('submit', function() {
+            setTimeout(() => {
+                fileInputConversation.value = '';
+                if (mediaUrlInput) {
+                    mediaUrlInput.disabled = false;
+                    mediaUrlInput.placeholder = 'Optional: Media URL (https://...)';
+                }
+                // Reset the attach link text
+                const attachLink = document.querySelector('a[href="#"][onclick*="file-input-conversation"]');
+                if (attachLink) {
+                    attachLink.innerHTML = '📎 Attach File';
+                    attachLink.style.color = '#007aff';
+                }
+            }, 100);
+        });
     </script>
 </body>
 </html>

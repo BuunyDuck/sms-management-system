@@ -179,11 +179,22 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'body' => 'required|string|max:1600',
             'media_url' => 'nullable|url',
+            'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,pdf|max:5120',
         ]);
+
+        // Handle file upload if present
+        $mediaUrl = $validated['media_url'] ?? null;
+        
+        if ($request->hasFile('media_file')) {
+            $file = $request->file('media_file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('media'), $filename);
+            $mediaUrl = url('/media/' . $filename);
+        }
 
         // Prepare options
         $options = [
-            'mediaUrl' => $validated['media_url'] ?? null,
+            'mediaUrl' => $mediaUrl,
         ];
 
         // Only add statusCallback if not in local environment
@@ -202,8 +213,7 @@ class ConversationController extends Controller
         // Save to database if successful
         if ($result['success']) {
             try {
-                // Prepare media data
-                $mediaUrl = $validated['media_url'] ?? null;
+                // Prepare media data (already set from file upload or URL above)
                 $numMedia = $mediaUrl ? 1 : 0;
                 $mediaUrlList = $mediaUrl ? $mediaUrl : '';
                 $mediaTypeList = '';
