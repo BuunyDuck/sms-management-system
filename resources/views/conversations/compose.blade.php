@@ -187,21 +187,38 @@
             display: block;
         }
         
-        .qr-button {
-            display: block;
-            width: 100%;
-            background: #f2f2f7;
-            border: none;
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 8px;
-            text-align: left;
-            cursor: pointer;
-            font-size: 15px;
+        /* Quick Response Buttons - Match conversation page styling */
+        #ai-message-include-btns {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+            margin-top: 10px;
         }
-        
-        .qr-button:hover {
-            background: #e5e5ea;
+
+        #ai-message-include-btns div {
+            padding: 12px 16px !important;
+            font-size: 14px !important;
+            font-weight: 500 !important;
+            background: #007aff !important;
+            color: white !important;
+            border-radius: 8px !important;
+            text-align: center !important;
+            cursor: pointer !important;
+            border: none !important;
+            transition: all 0.2s !important;
+            min-height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        #ai-message-include-btns div:hover {
+            background: #0051d5 !important;
+            transform: scale(1.02);
+        }
+
+        #ai-message-include-btns div:active {
+            transform: scale(0.98);
         }
         
         @media (min-width: 768px) {
@@ -370,77 +387,58 @@
         });
         
         function loadQuickResponses() {
-            console.log('Loading Quick Responses...');
-            
+            // Use the SAME approach as conversation page - just load HTML directly!
             fetch('/api/quick-responses')
-                .then(response => {
-                    console.log('Response status:', response.status);
-                    return response.text();
-                })
+                .then(response => response.text())
                 .then(html => {
-                    console.log('HTML received, length:', html.length);
+                    qrContainer.innerHTML = html;
                     
-                    // Create temporary container to use jQuery
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = html;
-                    document.body.appendChild(tempDiv);
-                    tempDiv.style.display = 'none';
-                    
-                    // Find buttons - they have onClick attributes
-                    const buttons = $(tempDiv).find('#ai-message-include-btns > div[onclick]');
-                    console.log('Buttons found:', buttons.length);
-                    
-                    qrContainer.innerHTML = '';
-                    
-                    if (buttons.length === 0) {
-                        qrContainer.innerHTML = '<p style="color: #f59e0b; padding: 12px;">No quick responses found</p>';
-                        return;
-                    }
-                    
-                    buttons.each(function() {
-                        const title = $(this).text().trim();
-                        const onclickAttr = $(this).attr('onclick') || '';
+                    // Fix button clicks to work with our textarea and handle <media> tags
+                    document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
+                        // Extract the ID from the onclick: $('#ID').data('content')
+                        const onclickAttr = btn.getAttribute('onclick');
+                        const contentIdMatch = onclickAttr.match(/\$\('#(\w+)'\)\.data\('content'\)/);
                         
-                        // Extract the content ID from onClick: $('#basicemailsettings').data('content')
-                        const contentIdMatch = onclickAttr.match(/\$\('#([^']+)'\)\.data\('content'\)/);
-                        if (!contentIdMatch) return;
+                        if (!contentIdMatch) return; // Skip if we can't parse it
                         
                         const contentId = contentIdMatch[1];
-                        const contentElement = $(tempDiv).find('#' + contentId);
-                        const content = contentElement.data('content') || contentElement.text() || '';
                         
-                        console.log('Creating button:', title, 'with content ID:', contentId);
-                        
-                        const newBtn = document.createElement('button');
-                        newBtn.className = 'qr-button';
-                        newBtn.textContent = title;
-                        newBtn.type = 'button';
-                        
-                        newBtn.addEventListener('click', function() {
-                            // Check for <media> tag
-                            const mediaMatch = content.match(/<media>(.*?)<\/media>/);
-                            let cleanContent = content;
+                        // Replace the onclick with our custom handler
+                        btn.onclick = function(e) {
+                            e.preventDefault();
                             
-                            if (mediaMatch) {
-                                const mediaUrl = mediaMatch[1];
-                                cleanContent = content.replace(/<media>.*?<\/media>/g, '').trim();
-                                document.getElementById('media-url').value = mediaUrl;
+                            // Get content from the hidden div
+                            const hiddenDiv = document.getElementById(contentId);
+                            if (hiddenDiv) {
+                                let content = hiddenDiv.getAttribute('data-content');
+                                
+                                // Check for <media> tag
+                                const mediaMatch = content.match(/<media>(.*?)<\/media>/);
+                                
+                                if (mediaMatch) {
+                                    // Extract media URL
+                                    const mediaUrl = mediaMatch[1];
+                                    
+                                    // Remove <media> tag from message
+                                    content = content.replace(/<media>.*?<\/media>/g, '').trim();
+                                    
+                                    // Populate media URL field
+                                    document.getElementById('media-url').value = mediaUrl;
+                                }
+                                
+                                // Populate message textarea
+                                messageInput.value = content;
+                                messageInput.dispatchEvent(new Event('input'));
+                                
+                                // Hide quick responses
+                                qrContainer.classList.remove('visible');
                             }
-                            
-                            messageInput.value = cleanContent;
-                            messageInput.dispatchEvent(new Event('input'));
-                            qrContainer.classList.remove('visible');
-                        });
-                        
-                        qrContainer.appendChild(newBtn);
+                        };
                     });
-                    
-                    // Remove temporary div
-                    document.body.removeChild(tempDiv);
                 })
                 .catch(error => {
                     console.error('Failed to load quick responses:', error);
-                    qrContainer.innerHTML = '<p style="color: #ff3b30; padding: 12px;">Error: ' + error.message + '</p>';
+                    qrContainer.innerHTML = '<p style="color: #ff3b30; padding: 12px;">Failed to load quick responses</p>';
                 });
         }
         
