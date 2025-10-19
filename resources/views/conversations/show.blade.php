@@ -23,118 +23,103 @@
 
         .chat-header {
             background: white;
-            padding: 15px 20px;
+            padding: 12px 20px;
             box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            justify-content: space-between;
+            gap: 15px;
             flex-shrink: 0;
             flex-wrap: wrap;
-        }
-
-        .chat-header-left {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .timeframe-filter {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            margin-top: 10px;
-            width: 100%;
-            padding-top: 10px;
-            border-top: 1px solid #e5e5ea;
-        }
-        
-        .timeframe-filter label {
-            font-size: 14px;
-            font-weight: 500;
-            color: #333;
-        }
-        
-        .timeframe-filter select {
-            padding: 6px 12px;
-            border-radius: 6px;
-            border: 1px solid #ddd;
-            background: white;
-            color: #333;
-            font-size: 14px;
-            cursor: pointer;
-            font-weight: 500;
-        }
-        
-        .timeframe-filter select:hover {
-            border-color: #007aff;
-        }
-        
-        .message-stats {
-            font-size: 12px;
-            color: #666;
-            margin-left: 10px;
         }
 
         .back-button {
             text-decoration: none;
             color: #007aff;
-            font-size: 16px;
+            font-size: 15px;
             font-weight: 500;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            white-space: nowrap;
         }
 
         .back-button:hover {
             opacity: 0.7;
         }
 
-        .contact-info h1 {
-            font-size: 18px;
-            color: #000;
-            margin-bottom: 2px;
-        }
-
-        .contact-info p {
-            font-size: 12px;
-            color: #8e8e93;
-        }
-
-        .customer-name {
-            font-size: 14px;
-            color: #007aff;
-            font-weight: 500;
-            margin-top: 4px;
-        }
-
-        .quick-links {
+        .header-title {
             display: flex;
-            gap: 10px;
             align-items: center;
+            gap: 12px;
+            font-size: 16px;
         }
-
-        .quick-link {
+        
+        .header-title strong {
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .agent-name {
+            font-size: 13px;
+            color: #666;
+            font-weight: 400;
+        }
+        
+        .timeframe-dropdown {
             padding: 6px 12px;
-            background: #f0f0f0;
-            border-radius: 8px;
-            text-decoration: none;
+            border-radius: 6px;
+            border: 1px solid #ddd;
+            background: white;
             color: #333;
+            font-size: 13px;
+            cursor: pointer;
+            font-weight: 500;
+            min-width: 140px;
+        }
+        
+        .timeframe-dropdown:hover {
+            border-color: #007aff;
+        }
+        
+        .select-all-button {
+            padding: 6px 14px;
+            background: #6c757d;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: all 0.2s;
+        }
+        
+        .select-all-button:hover {
+            background: #5a6268;
+        }
+        
+        .header-btn {
+            padding: 6px 14px;
+            border-radius: 6px;
+            text-decoration: none;
+            color: white;
             font-size: 13px;
             font-weight: 500;
             transition: all 0.2s;
-            display: flex;
-            align-items: center;
-            gap: 5px;
+            white-space: nowrap;
         }
-
-        .quick-link:hover {
+        
+        .account-btn {
             background: #007aff;
-            color: white;
         }
-
-        .quick-link.account {
-            background: #007aff;
-            color: white;
+        
+        .account-btn:hover {
+            background: #0051d5;
+        }
+        
+        .ticket-btn {
+            background: #f59e0b;
+        }
+        
+        .ticket-btn:hover {
+            background: #d97706;
         }
 
         .quick-link.account:hover {
@@ -378,8 +363,45 @@
                 max-width: 80%;
             }
 
-            .chat-header h1 {
-                font-size: 16px;
+            .chat-header {
+                gap: 10px;
+                padding: 10px 15px;
+            }
+            
+            .header-title {
+                font-size: 14px;
+                gap: 8px;
+            }
+            
+            .agent-name {
+                font-size: 11px;
+            }
+            
+            .timeframe-dropdown,
+            .select-all-button,
+            .header-btn {
+                font-size: 12px;
+                padding: 5px 10px;
+            }
+            
+            .timeframe-dropdown {
+                min-width: 120px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .chat-header {
+                gap: 8px;
+                padding: 8px 12px;
+            }
+            
+            .agent-name {
+                display: none; /* Hide agent name on very small screens */
+            }
+            
+            .select-all-button {
+                font-size: 11px;
+                padding: 4px 8px;
             }
         }
 
@@ -391,46 +413,40 @@
 </head>
 <body>
     <div class="chat-header">
-        <div class="chat-header-left">
-            <a href="{{ route('conversations.index') }}" class="back-button">
-                ← Back
-            </a>
-            <div class="contact-info">
-                <h1>{{ $formattedNumber }}</h1>
-                <p>{{ $messageCount }} messages</p>
-                @if($customerInfo)
-                    <div class="customer-name">👤 {{ $customerInfo->NAME }}</div>
-                @endif
-            </div>
+        <a href="{{ route('conversations.index') }}" class="back-button">← Back</a>
+        
+        <div class="header-title">
+            <strong>{{ $formattedNumber }}</strong>
+            @if($customerInfo)
+                <span class="agent-name">👤 {{ auth()->user()->name }}</span>
+            @endif
         </div>
+
+        <select id="timeframe" name="timeframe" class="timeframe-dropdown" onchange="window.location.href='{{ route('conversations.show', $phoneNumber) }}?timeframe=' + this.value">
+            <option value="24h" {{ $timeframe == '24h' ? 'selected' : '' }}>Last 24 Hours</option>
+            <option value="48h" {{ $timeframe == '48h' ? 'selected' : '' }}>Last 48 Hours</option>
+            <option value="week" {{ $timeframe == 'week' ? 'selected' : '' }}>This Week</option>
+            <option value="month" {{ $timeframe == 'month' ? 'selected' : '' }}>This Month</option>
+            <option value="year" {{ $timeframe == 'year' ? 'selected' : '' }}>This Year</option>
+            <option value="all" {{ $timeframe == 'all' ? 'selected' : '' }}>All Time</option>
+        </select>
+
+        <button type="button" onclick="toggleSelectAll()" class="select-all-button">✓ Select All</button>
+
         @if($customerInfo)
-        <div class="quick-links">
             <a href="http://www.montanasky.net/MyAccount/AdminEdit.tpl?sku={{ $customerInfo->SKU }}&findnet=y" 
                target="_blank" 
-               class="quick-link account" 
+               class="header-btn account-btn" 
                title="Open Customer Account">
                 📋 Account
             </a>
             <a href="http://www.montanasky.net/MyAccount/TicketTracker/NewTicket.tpl?ticType=Support&tAction=SEARCH&uid={{ $customerInfo->SKU }}&bdy=&subj=From+SMS" 
                target="_blank" 
-               class="quick-link" 
+               class="header-btn ticket-btn" 
                title="Create Support Ticket">
                 🎫 New Ticket
             </a>
-        </div>
         @endif
-        <div class="timeframe-filter">
-            <label for="timeframe">📅 Show messages from:</label>
-            <select id="timeframe" name="timeframe" onchange="window.location.href='{{ route('conversations.show', $phoneNumber) }}?timeframe=' + this.value">
-                <option value="24h" {{ $timeframe == '24h' ? 'selected' : '' }}>Last 24 Hours</option>
-                <option value="48h" {{ $timeframe == '48h' ? 'selected' : '' }}>Last 48 Hours</option>
-                <option value="week" {{ $timeframe == 'week' ? 'selected' : '' }}>This Week</option>
-                <option value="month" {{ $timeframe == 'month' ? 'selected' : '' }}>This Month</option>
-                <option value="year" {{ $timeframe == 'year' ? 'selected' : '' }}>This Year</option>
-                <option value="all" {{ $timeframe == 'all' ? 'selected' : '' }}>All Time</option>
-            </select>
-            <span class="message-stats">(Showing {{ $messageCount }} of {{ $totalMessageCount }} total)</span>
-        </div>
     </div>
 
     @if(session('success'))
