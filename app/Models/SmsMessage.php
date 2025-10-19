@@ -9,7 +9,7 @@ class SmsMessage extends Model
     /**
      * The table associated with the model.
      */
-    protected $table = 'cat_sms_dev';
+    protected $table = 'cat_sms';
 
     /**
      * The primary key associated with the table.
