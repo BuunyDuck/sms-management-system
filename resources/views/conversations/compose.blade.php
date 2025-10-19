@@ -380,7 +380,7 @@
                     
                     qrContainer.innerHTML = '';
                     buttons.forEach(button => {
-                        const content = $(button).data('content');
+                        const content = button.getAttribute('data-content') || '';
                         const title = button.textContent.trim();
                         
                         const newBtn = document.createElement('button');
