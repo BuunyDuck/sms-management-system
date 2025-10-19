@@ -523,7 +523,7 @@
             <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif data-message-id="{{ $message->id }}">
                 <input type="checkbox" class="message-checkbox" value="{{ $message->id }}" style="margin-right: 8px; cursor: pointer;">
                 <div class="message-bubble">
-                    {{ $message->BODY }}
+                    {!! nl2br(e($message->BODY)) !!}
                     
                     @if($message->NUMMEDIA > 0)
                         <div class="message-media">
