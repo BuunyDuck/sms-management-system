@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
+    <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SMS Management System</title>
@@ -218,8 +218,8 @@
             background: rgba(255, 255, 255, 0.05);
             border-radius: 4px;
         }
-    </style>
-</head>
+            </style>
+    </head>
 <body>
     <div class="container">
         <div class="header">
@@ -245,7 +245,7 @@
                 </div>
                 <div class="info-card">
                     <h3>Database</h3>
-                    <p>{{ config('database.default') }}</p>
+                    <p>{{ config('database.connections.mysql.database') }}.cat_sms</p>
                 </div>
             </div>
             
@@ -306,7 +306,7 @@
             </div>
             
             <!-- Auth Status -->
-            @auth
+                    @auth
                 <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #10b981;">
                     <p style="color: #166534; font-weight: 600; margin-bottom: 5px;">
                         👋 Welcome back, {{ auth()->user()->name }}!
@@ -340,11 +340,11 @@
                 <a href="{{ route('test.db') }}" class="btn btn-secondary">🔗 Test Database</a>
             </div>
         </div>
-        
+
         <div class="footer">
             <p>SMS Management System v0.1.0 | Built with Laravel {{ app()->version() }}</p>
             <p style="margin-top: 5px;">Montana Sky Internet © {{ date('Y') }}</p>
         </div>
     </div>
-</body>
+    </body>
 </html>
