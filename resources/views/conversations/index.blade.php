@@ -79,6 +79,62 @@
             background: #cbd5e0;
         }
 
+        .user-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-top: 1px solid #e2e8f0;
+            margin-top: 15px;
+        }
+
+        .user-name {
+            font-weight: 600;
+            color: #2d3748;
+        }
+
+        .filter-section {
+            padding: 15px 20px;
+            background: #faf5ff;
+            border-bottom: 1px solid #e2e8f0;
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .filter-label {
+            font-weight: 600;
+            color: #4a5568;
+            font-size: 14px;
+        }
+
+        .filter-select {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .filter-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .agent-badge {
+            background: #d6bcfa;
+            color: #553c9a;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 5px;
+        }
+
         .conversations-list {
             background: white;
             border-radius: 0 0 15px 15px;
@@ -232,11 +288,35 @@
                 <a href="{{ url('/') }}" class="btn btn-secondary">← Home</a>
                 <a href="{{ url('/send') }}" class="btn btn-primary">+ New Message</a>
             </div>
+            <div class="user-info">
+                <div>
+                    <span style="color: #718096;">Logged in as:</span>
+                    <span class="user-name">{{ auth()->user()->name }}</span>
+                    @if(auth()->user()->is_admin)
+                        <span style="background: #fbbf24; color: #92400e; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 5px;">ADMIN</span>
+                    @endif
+                </div>
+                <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                    @csrf
+                    <button type="submit" class="btn btn-secondary" style="padding: 8px 16px; font-size: 13px;">Logout</button>
+                </form>
+            </div>
         </div>
 
         <div class="conversations-list">
             <div class="search-box">
                 <input type="text" id="search" class="search-input" placeholder="Search conversations by phone number...">
+            </div>
+
+            <div class="filter-section">
+                <span class="filter-label">👤 Filter by Agent:</span>
+                <select class="filter-select" id="agent-filter" onchange="window.location.href='{{ route('conversations.index') }}?agent=' + this.value">
+                    <option value="all" {{ (!$filterAgent || $filterAgent === 'all') ? 'selected' : '' }}>All Agents</option>
+                    <option value="my" {{ $filterAgent === 'my' ? 'selected' : '' }}>My Conversations</option>
+                    @foreach($agents as $agent)
+                        <option value="{{ $agent }}" {{ $filterAgent === $agent ? 'selected' : '' }}>{{ $agent }}</option>
+                    @endforeach
+                </select>
             </div>
 
             @if($conversations->isEmpty())
@@ -269,6 +349,11 @@
                                     @endif
                                     {{ Str::limit($conversation->last_body ?? '(Media message)', 60) }}
                                 </div>
+                                @if($conversation->agent_name && $conversation->agent_name !== 'System')
+                                    <div style="margin-top: 5px;">
+                                        <span class="agent-badge">{{ $conversation->agent_name }}</span>
+                                    </div>
+                                @endif
                             </div>
                             <div class="conversation-meta">
                                 <span class="message-count">{{ $conversation->message_count }}</span>

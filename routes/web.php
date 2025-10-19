@@ -1,74 +1,13 @@
 <?php
 
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\ConversationController;
 use Illuminate\Support\Facades\Route;
 
-// Welcome page
+// Public routes
 Route::get('/', function () {
     return view('welcome');
 })->name('home');
-
-// PHP Info (for testing)
-Route::get('/phpinfo', function () {
-    phpinfo();
-})->name('phpinfo');
-
-// Test routes page
-Route::get('/test-routes', function () {
-    $routes = collect(Route::getRoutes())->map(function ($route) {
-        return [
-            'method' => implode('|', $route->methods()),
-            'uri' => $route->uri(),
-            'name' => $route->getName(),
-        ];
-    })->filter(function ($route) {
-        return !str_starts_with($route['uri'], '_');
-    })->values();
-    
-    return view('test-routes', ['routes' => $routes]);
-})->name('test.routes');
-
-// Documentation page
-Route::get('/docs', function () {
-    $docs = [
-        'PROJECT_OVERVIEW.md' => 'Project Overview & Architecture',
-        'DEPLOYMENT_SECURITY.md' => 'Deployment & Security Guide',
-        'NEXT_STEPS.md' => 'Development Roadmap',
-        'LOCAL_TESTING.md' => 'Local Testing Guide',
-        'README.md' => 'Quick Start Guide',
-    ];
-    
-    return view('docs-index', ['docs' => $docs]);
-})->name('docs');
-
-// Serve specific documentation file
-Route::get('/docs/{file}', function ($file) {
-    $allowedFiles = [
-        'overview' => 'PROJECT_OVERVIEW.md',
-        'security' => 'DEPLOYMENT_SECURITY.md',
-        'next-steps' => 'NEXT_STEPS.md',
-        'testing' => 'LOCAL_TESTING.md',
-        'readme' => 'README.md',
-    ];
-    
-    if (!isset($allowedFiles[$file])) {
-        abort(404);
-    }
-    
-    $filePath = base_path($allowedFiles[$file]);
-    
-    if (!file_exists($filePath)) {
-        abort(404);
-    }
-    
-    $content = file_get_contents($filePath);
-    $title = str_replace('.md', '', $allowedFiles[$file]);
-    
-    return view('docs-viewer', [
-        'title' => $title,
-        'content' => $content,
-        'file' => $file,
-    ]);
-})->name('docs.view');
 
 // Health check endpoint
 Route::get('/health', function () {
@@ -100,20 +39,26 @@ Route::get('/test-db', function () {
     }
 })->name('test.db');
 
-// SMS Test Page
-Route::get('/send', function () {
-    return view('sms-test');
-})->name('send');
+// Authenticated routes
+Route::middleware('auth')->group(function () {
+    // Profile routes
+    Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
+    Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
+    Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+    
+    // Conversation routes (protected)
+    Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
+    Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
+    Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
+    Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
+    
+    // SMS Test Page (protected)
+    Route::get('/send', function () {
+        return view('sms-test');
+    })->name('send');
+});
 
-// Conversations
-use App\Http\Controllers\ConversationController;
-
-Route::get('/conversations', [ConversationController::class, 'index'])->name('conversations.index');
-Route::get('/conversation/{phoneNumber}', [ConversationController::class, 'show'])->name('conversations.show');
-Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
-Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
-
-// Proxy for quick response templates (to avoid CORS)
+// Proxy for quick response templates (to avoid CORS) - accessible without auth
 Route::get('/api/quick-responses', function () {
     try {
         $url = 'https://www.montanasky.net/MyAccount/TicketTracker/ajax/AI-Messages-Include.tpl?prepared_sms_text_area_id=message-input&is_include_media_tag=T';
@@ -124,7 +69,5 @@ Route::get('/api/quick-responses', function () {
     }
 })->name('quick-responses');
 
-// Coming soon pages
-Route::get('/chatbot', function () {
-    return view('coming-soon', ['feature' => 'Chatbot Manager']);
-})->name('chatbot');
+require __DIR__.'/auth.php';
+require __DIR__.'/api.php';

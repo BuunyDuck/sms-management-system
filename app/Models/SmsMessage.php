@@ -40,7 +40,9 @@ class SmsMessage extends Model
      */
     protected $fillable = [
         'FROM',
+        'fromname',
         'TO',
+        'toname',
         'BODY',
         'MESSAGESID',
         'ACCOUNTSID',

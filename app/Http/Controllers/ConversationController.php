@@ -17,23 +17,34 @@ class ConversationController extends Controller
     /**
      * Display list of all conversations
      */
-    public function index()
+    public function index(Request $request)
     {
         $twilioNumber = config('services.twilio.from_number');
+        $filterAgent = $request->input('agent'); // null, 'my', or agent name
+        $currentUser = auth()->user();
 
         // Get recent conversations (last 30 days only for performance with 96K+ messages)
         $since = now()->subDays(30);
         
-        // Get all recent messages involving our Twilio number
-        $recentMessages = SmsMessage::where('thetime', '>=', $since)
-            ->where(function ($query) use ($twilioNumber) {
-                $query->where('FROM', $twilioNumber)
-                      ->orWhere('TO', $twilioNumber);
+        // Build query for recent messages
+        $query = SmsMessage::where('thetime', '>=', $since)
+            ->where(function ($q) use ($twilioNumber) {
+                $q->where('FROM', $twilioNumber)
+                  ->orWhere('TO', $twilioNumber);
             })
             ->whereNotNull('FROM')
-            ->whereNotNull('TO')
-            ->orderBy('thetime', 'desc')
-            ->get();
+            ->whereNotNull('TO');
+        
+        // Apply agent filter
+        if ($filterAgent === 'my') {
+            // Show only conversations where current user sent messages
+            $query->where('fromname', $currentUser->name);
+        } elseif ($filterAgent && $filterAgent !== 'all') {
+            // Show conversations for specific agent
+            $query->where('fromname', $filterAgent);
+        }
+        
+        $recentMessages = $query->orderBy('thetime', 'desc')->get();
         
         // Group by contact number
         $conversationsData = [];
@@ -48,6 +59,7 @@ class ConversationController extends Controller
                     'is_inbound' => ($message->FROM !== $twilioNumber),
                     'message_count' => 1,
                     'formatted_number' => $this->formatPhoneNumber($contactNumber),
+                    'agent_name' => $message->fromname ?? 'System',
                 ];
             } else {
                 $conversationsData[$contactNumber]->message_count++;
@@ -61,8 +73,17 @@ class ConversationController extends Controller
             })
             ->take(50)
             ->values();
+        
+        // Get list of all agents for filter dropdown
+        $agents = SmsMessage::where('thetime', '>=', $since)
+            ->where('FROM', $twilioNumber)
+            ->whereNotNull('fromname')
+            ->select('fromname')
+            ->distinct()
+            ->orderBy('fromname')
+            ->pluck('fromname');
 
-        return view('conversations.index', compact('conversations'));
+        return view('conversations.index', compact('conversations', 'agents', 'filterAgent'));
     }
 
     /**
@@ -179,9 +200,26 @@ class ConversationController extends Controller
                     };
                 }
 
+                // Get customer name for toname
+                $customerInfo = \DB::connection('mysql')
+                    ->select("
+                        SELECT c.NAME as customer_name, c.SKU as customer_sku
+                        FROM cat_customer_to_phone AS p
+                        JOIN db_297_netcustomers AS c ON p.customer_sku = c.SKU
+                        WHERE p.phone = ?
+                        ORDER BY p.is_primary_record_for_cat_sms DESC
+                        LIMIT 1
+                    ", [ltrim($phoneNumber, '+1')]);
+                
+                $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
+                $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
+
                 SmsMessage::create([
                     'FROM' => config('services.twilio.from_number'),
+                    'fromname' => auth()->user()->name,  // Agent name
                     'TO' => $phoneNumber,
+                    'toname' => $toName,  // Customer name
+                    'custsku' => $custSku,
                     'BODY' => $validated['body'],
                     'MESSAGESID' => $result['message_sid'],
                     'ACCOUNTSID' => config('services.twilio.account_sid'),

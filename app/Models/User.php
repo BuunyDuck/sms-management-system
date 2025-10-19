@@ -20,7 +20,11 @@ class User extends Authenticatable
     protected $fillable = [
         'name',
         'email',
+        'username',
+        'employee_id',
+        'is_admin',
         'password',
+        'last_login_at',
     ];
 
     /**
@@ -42,7 +46,24 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'last_login_at' => 'datetime',
+            'is_admin' => 'boolean',
             'password' => 'hashed',
         ];
+    }
+    
+    /**
+     * Get the employee record from the employee database
+     */
+    public function employee()
+    {
+        if (!$this->employee_id) {
+            return null;
+        }
+        
+        return \DB::connection('mysql')
+            ->table('db_1257_employees')
+            ->where('id', $this->employee_id)
+            ->first();
     }
 }
