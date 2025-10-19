@@ -204,17 +204,8 @@ class WebhookController extends Controller
                 $customerName = $lastOutbound->toname ?: '';
             }
 
-            // Get recent conversation history (last 24 hours)
-            $recentMessages = SmsMessage::where(function($query) use ($message) {
-                $query->where('FROM', $message['from'])
-                      ->orWhere('TO', $message['from']);
-            })
-            ->where('thetime', '>=', now()->subDay())
-            ->orderBy('thetime', 'asc')
-            ->get();
-
-            // Build email body
-            $emailBody = $this->buildEmailBody($message, $recentMessages, $agentName, $customerName);
+            // Build email body (no need for history - they can click the link!)
+            $emailBody = $this->buildEmailBody($message, $agentName, $customerName);
 
             // Send email using Laravel Mail
             \Mail::send([], [], function ($mail) use ($sendToEmail, $message, $emailBody) {
@@ -242,52 +233,44 @@ class WebhookController extends Controller
     }
 
     /**
-     * Build HTML email body (matching ColdFusion format)
+     * Build HTML email body - Simple & clean!
      * 
      * @param array $message Current message
-     * @param \Illuminate\Database\Eloquent\Collection $recentMessages Recent conversation
      * @param string $agentName Agent name
      * @param string $customerName Customer name
      * @return string HTML email body
      */
-    protected function buildEmailBody(array $message, $recentMessages, string $agentName, string $customerName): string
+    protected function buildEmailBody(array $message, string $agentName, string $customerName): string
     {
         $fromNumber = str_replace('+', '', $message['from']);
         $toNumber = str_replace('+', '', $message['to']);
         $appUrl = config('app.url');
         $conversationUrl = $appUrl . '/conversation/' . ltrim($message['from'], '+');
 
-        $html = "<html><body>";
+        $html = "<html><body style='font-family: Arial, sans-serif;'>";
+        $html .= "<h3 style='color: #007aff;'>📱 New SMS Message</h3>";
         $html .= "<strong>From:</strong> {$fromNumber} {$customerName}<br>";
         $html .= "<strong>To:</strong> {$toNumber}<br>";
         $html .= "<strong>Agent:</strong> {$agentName}<br><br>";
-        $html .= "<strong>SMS from:</strong> {$message['from']}<br>";
-        $html .= "<a href=\"{$conversationUrl}\">Open SMS Conversation</a><br><br>";
-        $html .= "<strong>Message:</strong> <em>" . htmlspecialchars($message['body']) . "</em><br>";
+        $html .= "<strong>Message:</strong><br>";
+        $html .= "<p style='background: #f5f5f5; padding: 12px; border-radius: 8px;'>" . htmlspecialchars($message['body']) . "</p>";
 
         // Add media attachments if any
         if (!empty($message['media_urls'])) {
-            $html .= "<br><strong>Media Attachments:</strong><br>";
+            $html .= "<strong>📎 Media Attachments:</strong><br>";
             foreach ($message['media_urls'] as $media) {
                 $html .= "- <a href=\"{$media['url']}\">{$media['content_type']}</a><br>";
             }
+            $html .= "<br>";
         }
 
-        // Add conversation history
-        if ($recentMessages->count() > 1) {
-            $html .= "<br><br>----- Recent Conversation History -----<br><br>";
-            foreach ($recentMessages as $msg) {
-                $date = \Carbon\Carbon::parse($msg->thetime)->format('m/d H:i');
-                $html .= "<strong>{$date}</strong> From {$msg->fromname}:<br>";
-                $html .= htmlspecialchars($msg->BODY) . "<br>";
-                if ($msg->ticketid && $msg->ticketid != '0') {
-                    $html .= "<br><a href=\"http://www.montanasky.net/MyAccount/TicketTracker/ViewTicket.tpl?ticketid={$msg->ticketid}\">View Ticket</a><br>";
-                }
-                $html .= "<br>";
-            }
-        }
-
+        // Big prominent link to view conversation
+        $html .= "<br>";
+        $html .= "<a href=\"{$conversationUrl}\" style='display: inline-block; background: #007aff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; font-weight: bold;'>View Full Conversation →</a>";
+        $html .= "<br><br>";
+        $html .= "<small style='color: #666;'>Click the button above to see the complete conversation history and reply.</small>";
         $html .= "</body></html>";
+        
         return $html;
     }
 }
