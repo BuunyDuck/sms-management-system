@@ -219,6 +219,14 @@ class ConversationController extends Controller
                 $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
                 $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
 
+                // Get "Send to Support" preference
+                $sendToSupport = \DB::table('conversation_preferences')
+                    ->where('phone_number', $phoneNumber)
+                    ->value('send_to_support') ?? false;
+                
+                // Convert to replies_to_support format (1 = send to support, 0 = send to agent)
+                $repliesToSupport = $sendToSupport ? 1 : 0;
+
                 SmsMessage::create([
                     'FROM' => config('services.twilio.from_number'),
                     'fromname' => auth()->user()->name,  // Agent name
@@ -232,6 +240,8 @@ class ConversationController extends Controller
                     'MESSAGESTATUS' => $result['status'],
                     'mediaurllist' => $mediaUrlList,
                     'mediatypelist' => $mediaTypeList,
+                    'replies_to_support' => $repliesToSupport,
+                    'user_id' => auth()->id(),
                 ]);
 
                 Log::info('✅ Outbound message saved to database from conversation', ['message_sid' => $result['message_sid']]);

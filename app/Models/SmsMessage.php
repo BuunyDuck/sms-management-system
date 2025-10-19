@@ -65,6 +65,7 @@ class SmsMessage extends Model
         'custsku',
         'user_id',
         'ticketid',
+        'replies_to_support',
     ];
 
     /**

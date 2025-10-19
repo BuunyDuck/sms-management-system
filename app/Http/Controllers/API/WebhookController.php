@@ -121,6 +121,10 @@ class WebhookController extends Controller
 
             Log::info('✅ Message saved to database', ['message_sid' => $message['message_sid']]);
             echo "✅ Saved to database\n\n";
+            
+            // Send email notification (matching ColdFusion logic)
+            $this->sendEmailNotification($message);
+            
         } catch (\Exception $e) {
             Log::error('❌ Failed to save message to database', [
                 'error' => $e->getMessage(),
@@ -128,11 +132,6 @@ class WebhookController extends Controller
             ]);
             echo "❌ Database error: {$e->getMessage()}\n\n";
         }
-
-        // TODO: Later we'll add:
-        // - Check for chatbot keywords
-        // - Send email notification
-        // - Link to customer
 
         // Return TwiML response (optional - tells Twilio we received it)
         return response('<?xml version="1.0" encoding="UTF-8"?><Response></Response>', 200)
@@ -163,5 +162,132 @@ class WebhookController extends Controller
         // TODO: Later update database record with delivery status
 
         return response('OK', 200);
+    }
+
+    /**
+     * Send email notification for incoming SMS (matching ColdFusion logic)
+     * 
+     * @param array $message Parsed message data
+     * @return void
+     */
+    protected function sendEmailNotification(array $message): void
+    {
+        try {
+            // Skip if from internal test number to another internal number
+            if ($message['from'] === '+14062152048' && $message['to'] === '+14067524335') {
+                Log::info('Skipping email notification for internal test message');
+                return;
+            }
+
+            // Find the last outbound message to this phone number
+            $lastOutbound = SmsMessage::where('TO', $message['from'])
+                ->where('user_id', '!=', 0)
+                ->where('thetime', '>=', now()->subDay())
+                ->orderBy('thetime', 'desc')
+                ->first();
+
+            // Determine email recipient
+            $sendToEmail = 'support@montanasky.net'; // Default
+            $agentName = 'MTSKY';
+            $customerName = '';
+
+            if ($lastOutbound) {
+                // Check replies_to_support flag (0 = send to agent, 1 = send to support)
+                if ($lastOutbound->replies_to_support == 0 && $lastOutbound->user_id) {
+                    // Look up agent's email
+                    $agent = \App\Models\User::find($lastOutbound->user_id);
+                    if ($agent && $agent->email) {
+                        $sendToEmail = $agent->email;
+                    }
+                }
+                $agentName = $lastOutbound->fromname ?: 'MTSKY';
+                $customerName = $lastOutbound->toname ?: '';
+            }
+
+            // Get recent conversation history (last 24 hours)
+            $recentMessages = SmsMessage::where(function($query) use ($message) {
+                $query->where('FROM', $message['from'])
+                      ->orWhere('TO', $message['from']);
+            })
+            ->where('thetime', '>=', now()->subDay())
+            ->orderBy('thetime', 'asc')
+            ->get();
+
+            // Build email body
+            $emailBody = $this->buildEmailBody($message, $recentMessages, $agentName, $customerName);
+
+            // Send email using Laravel Mail
+            \Mail::send([], [], function ($mail) use ($sendToEmail, $message, $emailBody) {
+                $mail->to($sendToEmail)
+                     ->from('dash-sms@montanasky.net', 'MontanaSky SMS')
+                     ->subject('SMS from ' . $message['from'])
+                     ->html($emailBody);
+            });
+
+            Log::info('📧 Email notification sent', [
+                'to' => $sendToEmail,
+                'from_number' => $message['from'],
+                'message_sid' => $message['message_sid'],
+            ]);
+            echo "📧 Email sent to: {$sendToEmail}\n\n";
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to send email notification', [
+                'error' => $e->getMessage(),
+                'message_sid' => $message['message_sid'] ?? null,
+            ]);
+            echo "❌ Email error: {$e->getMessage()}\n\n";
+            // Don't fail the webhook if email fails
+        }
+    }
+
+    /**
+     * Build HTML email body (matching ColdFusion format)
+     * 
+     * @param array $message Current message
+     * @param \Illuminate\Database\Eloquent\Collection $recentMessages Recent conversation
+     * @param string $agentName Agent name
+     * @param string $customerName Customer name
+     * @return string HTML email body
+     */
+    protected function buildEmailBody(array $message, $recentMessages, string $agentName, string $customerName): string
+    {
+        $fromNumber = str_replace('+', '', $message['from']);
+        $toNumber = str_replace('+', '', $message['to']);
+        $appUrl = config('app.url');
+        $conversationUrl = $appUrl . '/conversation/' . ltrim($message['from'], '+');
+
+        $html = "<html><body>";
+        $html .= "<strong>From:</strong> {$fromNumber} {$customerName}<br>";
+        $html .= "<strong>To:</strong> {$toNumber}<br>";
+        $html .= "<strong>Agent:</strong> {$agentName}<br><br>";
+        $html .= "<strong>SMS from:</strong> {$message['from']}<br>";
+        $html .= "<a href=\"{$conversationUrl}\">Open SMS Conversation</a><br><br>";
+        $html .= "<strong>Message:</strong> <em>" . htmlspecialchars($message['body']) . "</em><br>";
+
+        // Add media attachments if any
+        if (!empty($message['media_urls'])) {
+            $html .= "<br><strong>Media Attachments:</strong><br>";
+            foreach ($message['media_urls'] as $media) {
+                $html .= "- <a href=\"{$media['url']}\">{$media['content_type']}</a><br>";
+            }
+        }
+
+        // Add conversation history
+        if ($recentMessages->count() > 1) {
+            $html .= "<br><br>----- Recent Conversation History -----<br><br>";
+            foreach ($recentMessages as $msg) {
+                $date = \Carbon\Carbon::parse($msg->thetime)->format('m/d H:i');
+                $html .= "<strong>{$date}</strong> From {$msg->fromname}:<br>";
+                $html .= htmlspecialchars($msg->BODY) . "<br>";
+                if ($msg->ticketid && $msg->ticketid != '0') {
+                    $html .= "<br><a href=\"http://www.montanasky.net/MyAccount/TicketTracker/ViewTicket.tpl?ticketid={$msg->ticketid}\">View Ticket</a><br>";
+                }
+                $html .= "<br>";
+            }
+        }
+
+        $html .= "</body></html>";
+        return $html;
     }
 }
