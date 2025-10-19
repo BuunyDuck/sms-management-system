@@ -7,11 +7,18 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <style>
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
             background: #e5e5ea;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
         }
         
         .compose-container {
@@ -19,16 +26,17 @@
             height: 100vh;
             display: flex;
             flex-direction: column;
-            background: white;
         }
         
         .compose-header {
-            background: #f7f7f8;
-            border-bottom: 1px solid #c6c6c8;
-            padding: 12px 16px;
+            background: white;
+            padding: 12px 20px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 15px;
+            flex-shrink: 0;
+            flex-wrap: wrap;
         }
         
         .compose-header h1 {
@@ -36,6 +44,18 @@
             font-weight: 600;
             color: #333;
             margin: 0;
+        }
+        
+        .back-button {
+            text-decoration: none;
+            color: #007aff;
+            font-size: 15px;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+        
+        .back-button:hover {
+            opacity: 0.7;
         }
         
         .phone-input-container {
@@ -127,17 +147,23 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            flex-shrink: 0;
             transition: all 0.2s;
+            flex-shrink: 0;
         }
         
         .send-button:hover {
             background: #0051d5;
+            transform: scale(1.05);
+        }
+        
+        .send-button:active {
+            transform: scale(0.95);
         }
         
         .send-button:disabled {
-            background: #c6c6c8;
+            background: #d1d1d6;
             cursor: not-allowed;
+            transform: scale(1);
         }
         
         .char-count {
@@ -180,6 +206,25 @@
             transform: scale(0.98);
         }
         
+        /* Responsive Styles - Match conversation page */
+        @media (max-width: 768px) {
+            .compose-header {
+                gap: 10px;
+                padding: 10px 15px;
+            }
+            
+            .compose-header h1 {
+                font-size: 14px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .compose-header {
+                gap: 8px;
+                padding: 8px 12px;
+            }
+        }
+        
         @media (min-width: 768px) {
             .compose-container {
                 max-width: 600px;
@@ -187,13 +232,18 @@
                 height: 100vh;
             }
         }
+        
+        /* Smooth scrolling */
+        .messages-area {
+            scroll-behavior: smooth;
+        }
     </style>
 </head>
 <body>
     <div class="compose-container">
         <!-- Header -->
         <div class="compose-header">
-            <a href="{{ route('conversations.index') }}" style="color: #007aff; text-decoration: none; font-size: 17px;">← Back</a>
+            <a href="{{ route('conversations.index') }}" class="back-button">← Back</a>
             <h1>New SMS-MMS Message</h1>
         </div>
         
