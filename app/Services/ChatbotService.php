@@ -212,6 +212,12 @@ class ChatbotService
         $template = $this->getTemplateForPath($path);
 
         if ($template) {
+            // For single-level menu items (1-20), reset back to main menu
+            // so next selection is treated as new (not as submenu)
+            if (count($path) === 1) {
+                $session->startMainMenu();  // Reset to 'm' for next selection
+            }
+            
             return "BOT: " . $template;
         }
 
