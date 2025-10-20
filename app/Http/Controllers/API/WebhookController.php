@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\SmsMessage;
 use App\Services\TwilioService;
 use App\Services\ChatbotService;
+use App\Services\ChatbotLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Response;
@@ -14,7 +15,8 @@ class WebhookController extends Controller
 {
     public function __construct(
         private TwilioService $twilioService,
-        private ChatbotService $chatbotService
+        private ChatbotService $chatbotService,
+        private ChatbotLogger $chatbotLogger
     ) {}
 
     /**
@@ -92,12 +94,18 @@ class WebhookController extends Controller
             Log::info('🤖 Chatbot MENU detected, starting session', ['from' => $message['from']]);
             $chatbotResponse = $this->chatbotService->startSession($message['from']);
             $shouldProcessNormally = false;
+            
+            // Start analytics session
+            $this->chatbotLogger->startSession($message['from'], $message['to']);
         }
         // Check if this is an EXIT keyword (end chatbot)
         elseif ($this->chatbotService->isExitKeyword($message['body'])) {
             Log::info('🤖 Chatbot EXIT detected, ending session', ['from' => $message['from']]);
             $chatbotResponse = $this->chatbotService->endSession($message['from']);
             $shouldProcessNormally = false;
+            
+            // End analytics session
+            $this->chatbotLogger->endSession($message['from'], 'explicit');
         }
         // Check if there's an active chatbot session
         elseif ($this->chatbotService->hasActiveSession($message['from'])) {
@@ -142,6 +150,8 @@ class WebhookController extends Controller
                 ]);
                 echo "✅ Chatbot response sent: {$twilioResponse['message_sid']}\n\n";
                 
+                // Log chatbot interaction to analytics (will be done after message save)
+                
             } catch (\Exception $e) {
                 Log::error('❌ Failed to send chatbot response', [
                     'error' => $e->getMessage(),
@@ -174,7 +184,7 @@ class WebhookController extends Controller
                 $mediaTypeList = implode("\t", $types);
             }
 
-            SmsMessage::create([
+            $savedMessage = SmsMessage::create([
                 'FROM' => $message['from'],
                 'TO' => $message['to'],
                 'BODY' => $message['body'],
@@ -195,10 +205,31 @@ class WebhookController extends Controller
                 'TOSTATE' => $message['to_state'] ?? null,
                 'TOZIP' => $message['to_zip'] ?? null,
                 'TOCOUNTRY' => $message['to_country'] ?? null,
+                'is_bot_interaction' => !$shouldProcessNormally, // Flag bot messages
             ]);
 
             Log::info('✅ Message saved to database', ['message_sid' => $message['message_sid']]);
             echo "✅ Saved to database\n\n";
+            
+            // Log bot interaction to analytics if it was a chatbot message
+            if (!$shouldProcessNormally && isset($chatbotResponse)) {
+                try {
+                    $session = \App\Models\BotSession::find($this->normalizePhone($message['from']));
+                    $menuPath = $session ? $session->menu : '';
+                    
+                    $this->chatbotLogger->logInteraction(
+                        phone: $message['from'],
+                        menuPath: $menuPath,
+                        userInput: $message['body'],
+                        botResponse: $chatbotResponse,
+                        responseTemplate: $this->getTemplateFromMenuPath($menuPath),
+                        hasMedia: !empty($mediaUrl ?? false),
+                        messageId: $savedMessage->id
+                    );
+                } catch (\Exception $e) {
+                    Log::warning('Failed to log chatbot interaction', ['error' => $e->getMessage()]);
+                }
+            }
             
             // Send email notification ONLY if not handled by chatbot
             if ($shouldProcessNormally) {
@@ -358,5 +389,37 @@ class WebhookController extends Controller
         $html .= '</html>';
         
         return $html;
+    }
+
+    /**
+     * Normalize phone number to 10 digits
+     */
+    protected function normalizePhone(string $phone): string
+    {
+        $phone = preg_replace('/[^0-9]/', '', $phone);
+        return substr($phone, -10);
+    }
+
+    /**
+     * Get template name from menu path
+     */
+    protected function getTemplateFromMenuPath(string $menuPath): ?string
+    {
+        $templates = [
+            'm,1' => 'SKYCONNECT.txt',
+            'm,2' => 'DSL.txt',
+            'm,3' => 'cable.txt',
+            'm,4' => 'email.txt',
+            'm,5' => 'outage.txt',
+            'm,6' => 'speedtest.txt',
+            'm,7' => 'payment.txt',
+            'm,8' => 'mstv.txt',
+            'm,9' => 'voipphone.txt',
+            'm,10' => 'plume.txt',
+            'm,11' => 'fiber.txt',
+            'm,12' => 'p2p.txt',
+        ];
+
+        return $templates[$menuPath] ?? 'main_menu';
     }
 }

@@ -122,6 +122,14 @@ class ConversationController extends Controller
         // Build query for messages
         $query = SmsMessage::forNumber($phoneNumber);
         
+        // Check if user wants to see bot interactions (default: hide)
+        $showBotInteractions = $request->input('show_bot', false);
+        
+        // Filter out bot interactions by default
+        if (!$showBotInteractions) {
+            $query->excludeBotInteractions();
+        }
+        
         // Apply date filter if specified
         if ($dateFilter) {
             $query->where('thetime', '>=', $dateFilter);
@@ -139,6 +147,9 @@ class ConversationController extends Controller
         
         // Get total message count (all time)
         $totalMessageCount = SmsMessage::forNumber($phoneNumber)->count();
+        
+        // Count bot interactions for this conversation
+        $botInteractionCount = SmsMessage::forNumber($phoneNumber)->onlyBotInteractions()->count();
 
         // If no messages exist at all, redirect to compose with this number
         if ($totalMessageCount === 0) {
@@ -157,7 +168,7 @@ class ConversationController extends Controller
             ->where('phone_number', $phoneNumber)
             ->value('send_to_support') ?? false;
 
-        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'totalMessageCount', 'customerInfo', 'timeframe', 'sendToSupport'));
+        return view('conversations.show', compact('messages', 'phoneNumber', 'formattedNumber', 'messageCount', 'totalMessageCount', 'customerInfo', 'timeframe', 'sendToSupport', 'showBotInteractions', 'botInteractionCount'));
     }
 
     /**

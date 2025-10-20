@@ -66,6 +66,7 @@ class SmsMessage extends Model
         'user_id',
         'ticketid',
         'replies_to_support',
+        'is_bot_interaction',
     ];
 
     /**
@@ -178,6 +179,25 @@ class SmsMessage extends Model
     public function scopeLatest($query)
     {
         return $query->orderBy('thetime', 'desc');
+    }
+
+    /**
+     * Scope: Exclude bot interactions (for agent view)
+     */
+    public function scopeExcludeBotInteractions($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('is_bot_interaction', false)
+              ->orWhereNull('is_bot_interaction');
+        });
+    }
+
+    /**
+     * Scope: Only bot interactions (for analytics)
+     */
+    public function scopeOnlyBotInteractions($query)
+    {
+        return $query->where('is_bot_interaction', true);
     }
 
     /**
