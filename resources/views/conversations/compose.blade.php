@@ -236,6 +236,7 @@
         <!-- Header -->
         <div class="compose-header">
             <a href="{{ route('conversations.index') }}" class="back-button">← Back</a>
+            <span style="font-size: 28px; line-height: 1;">🚀</span>
             <h1>New SMS-MMS Message</h1>
         </div>
         
