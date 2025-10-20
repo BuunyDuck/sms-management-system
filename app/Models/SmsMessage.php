@@ -114,9 +114,9 @@ class SmsMessage extends Model
      */
     public function isOutbound(): bool
     {
-        // Messages from our Twilio number are outbound
-        $twilioNumber = config('services.twilio.from_number');
-        return $this->FROM && $this->FROM === $twilioNumber;
+        // Messages from our Twilio numbers are outbound
+        $mtskyNumbers = ['+14062152048', '+14067524335'];
+        return $this->FROM && in_array($this->FROM, $mtskyNumbers);
     }
 
     /**
@@ -155,17 +155,18 @@ class SmsMessage extends Model
      */
     public function scopeForNumber($query, string $phoneNumber)
     {
-        $twilioNumber = config('services.twilio.from_number');
+        // Both Montana Sky numbers
+        $mtskyNumbers = ['+14062152048', '+14067524335'];
         
-        return $query->where(function ($q) use ($phoneNumber, $twilioNumber) {
-            // Inbound: From customer to us
-            $q->where(function ($subQ) use ($phoneNumber, $twilioNumber) {
+        return $query->where(function ($q) use ($phoneNumber, $mtskyNumbers) {
+            // Inbound: From customer to ANY Montana Sky number
+            $q->where(function ($subQ) use ($phoneNumber, $mtskyNumbers) {
                 $subQ->where('FROM', $phoneNumber)
-                     ->where('TO', $twilioNumber);
+                     ->whereIn('TO', $mtskyNumbers);
             })
-            // Outbound: From us to customer
-            ->orWhere(function ($subQ) use ($phoneNumber, $twilioNumber) {
-                $subQ->where('FROM', $twilioNumber)
+            // Outbound: From ANY Montana Sky number to customer
+            ->orWhere(function ($subQ) use ($phoneNumber, $mtskyNumbers) {
+                $subQ->whereIn('FROM', $mtskyNumbers)
                      ->where('TO', $phoneNumber);
             });
         });

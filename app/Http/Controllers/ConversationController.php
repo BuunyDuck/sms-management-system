@@ -19,7 +19,8 @@ class ConversationController extends Controller
      */
     public function index(Request $request)
     {
-        $twilioNumber = config('services.twilio.from_number');
+        // Both Montana Sky numbers
+        $mtskyNumbers = ['+14062152048', '+14067524335'];
         $filterAgent = $request->input('agent'); // null, 'my', or agent name
         $currentUser = auth()->user();
 
@@ -28,9 +29,9 @@ class ConversationController extends Controller
         
         // Build query for recent messages
         $query = SmsMessage::where('thetime', '>=', $since)
-            ->where(function ($q) use ($twilioNumber) {
-                $q->where('FROM', $twilioNumber)
-                  ->orWhere('TO', $twilioNumber);
+            ->where(function ($q) use ($mtskyNumbers) {
+                $q->whereIn('FROM', $mtskyNumbers)
+                  ->orWhereIn('TO', $mtskyNumbers);
             })
             ->whereNotNull('FROM')
             ->whereNotNull('TO');
@@ -49,7 +50,7 @@ class ConversationController extends Controller
         // Group by contact number
         $conversationsData = [];
         foreach ($recentMessages as $message) {
-            $contactNumber = ($message->FROM === $twilioNumber) ? $message->TO : $message->FROM;
+            $contactNumber = (in_array($message->FROM, $mtskyNumbers)) ? $message->TO : $message->FROM;
             
             if (!isset($conversationsData[$contactNumber])) {
                 $conversationsData[$contactNumber] = (object)[
