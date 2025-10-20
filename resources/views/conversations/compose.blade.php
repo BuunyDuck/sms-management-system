@@ -225,14 +225,6 @@
             }
         }
         
-        @media (min-width: 768px) {
-            .compose-container {
-                max-width: 600px;
-                margin: 0 auto;
-                height: 100vh;
-            }
-        }
-        
         /* Smooth scrolling */
         .messages-area {
             scroll-behavior: smooth;
