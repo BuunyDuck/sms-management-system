@@ -1,0 +1,13 @@
+Plume WiFi Support:
+
+Download the HomePass app:
+
+Android:
+https://play.google.com/store/apps/details?id=com.plume.homepass
+
+Apple App:
+https://apps.apple.com/us/app/homepass-by-plume/id1086207508
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/PLUMEINSTALL.png</media>

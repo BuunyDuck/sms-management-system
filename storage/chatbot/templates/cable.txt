@@ -1,0 +1,28 @@
+Cable Modem Trouble Shooting
+
+Please see graphic.
+
+Make sure cable coming in from outside is not damaged.
+
+Turn off power and disconnect CATV connector
+(if you have an external wifi router, power that off also).
+
+Wait 2 minutes before connecting the cables again.
+
+Wait 5 minutes for a reboot
+Do not power off again.
+
+Receive / Down Light
+will blink until connected
+
+Send / Up Light
+will blink untill connected
+
+Online / Internet light
+solid
+
+Should work now
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/CableModemCables.jpg</media>

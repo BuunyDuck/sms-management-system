@@ -1,0 +1,29 @@
+Email Settings:
+
+Incoming Server:
+mail.montanasky.net
+Outgoing Server:
+mail.montanasky.net
+(Both the same)
+
+Username or login name is your full email address for both incoming and outgoing server hosts.
+
+SSL:  select
+
+POP3
+Incoming Server 
+Port: 995
+Outgoing Server 
+Port 465
+
+IMAP
+Incoming Server 
+Port: 993
+Outgoing Server
+Port 465
+
+https://selfhelp.montanasky.net/email
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/logo.png</media>

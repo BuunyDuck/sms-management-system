@@ -1,0 +1,11 @@
+Payment Information:
+
+You can pay your bill online at:
+https://www.montanasky.net/MyAccount/
+
+Or call our billing department:
+406-752-4456
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/logo.png</media>

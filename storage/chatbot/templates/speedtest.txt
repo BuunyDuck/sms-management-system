@@ -1,0 +1,17 @@
+MontanaSky SpeedTest URL
+
+How to do a proper speed test:
+https://selfhelp.montanasky.net/speed-test
+
+Use only this speedtest site:
+
+https://speedtest.montanasky.net
+
+Try to use a wired connection to the router.
+
+If Wifi make sure you have full bars on your testing device and in clear view of the wifi router.
+
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/logo.png</media>

@@ -1,0 +1,40 @@
+Fiber GPON Reboot
+
+Do NOT unplug fiber cable
+
+Unplug POWER from the ONT and your Router
+Wait 2 Minutes
+
+Power Up Fiber ONT
+Power Up Router
+Wait 5 to 10 minutes for all to reboot
+
+Do Not Reboot Again.
+
+Fiber Diagnosis / Indicator Lights
+
+The exact LED layout can vary slightly by model, but the fiber-related LEDs are generally the same across the UISP ONT lineup:
+
+PON (Passive Optical Network)--Shows successful registration with the OLT.
+
+Solid green --> Registered and active.
+
+Blinking green --> Attempting to register.
+
+Red or off --> No signal, or registration failed.
+
+LOS (Loss of Signal) --> Indicates the fiber physical status.
+
+Off --> No loss, fiber link detected.
+
+Solid red --> No light or optical signal present.
+
+Blinking red --> Optical power too low or unstable.
+
+Some ONTs merge PON and LOS into a single "Fiber" LED, with green = good and red = bad.
+
+Other LEDs (LAN, Wi-Fi, Power) vary by model but don't affect fiber diagnosis.
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/Fiber-GPON.png</media>

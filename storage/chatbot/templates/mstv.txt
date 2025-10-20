@@ -1,0 +1,31 @@
+MontanaSky TV
+
+IPTV Trouble Shooting
+
+1. Internet must be working: 
+Check other devices on WiFi.
+
+2. Select HOME button on Roku Remote
+
+3. Confirm TV is working:
+Correct Input  / source selected on TV remote.
+
+You should see purple Roku Screen
+
+4. Use  Roku remote arrow buttons to select:
+MontanaSkyTV icon
+
+If you see “Undefined Error” or
+most channels saying "Bitrate Error":
+Unplug power cord from side of Roku 
+wait 1 minutes and re-power.
+Roku will show start screen
+Tap Home and MontanaSkyTv
+
+Repeat steps 1 - 4 again if needed
+
+If a MontanaSkyTV channel progress circle stops under 70% means the channel is not coming from the station and should return soon. Choose another channel to watch.
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/logo.png</media>

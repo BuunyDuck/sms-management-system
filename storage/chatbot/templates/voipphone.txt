@@ -1,0 +1,26 @@
+VOIP Phone Reboot
+
+Phones powered by POE Power Over Ethernet:
+POE cable supplies both power and router connection.
+
+1. Find the POE ethernet cable on the back of the phone
+2. Unplug the cable
+3. Wait 30 seconds
+4. Plug the ethernet cable back in 
+5. Wait a couple minutes for the phone to power back on and boot up
+6. You can test by calling out or using another phone to call in.
+
+Phones powered by a normal power outlet:
+
+1. Find the Power and Ethernet cables on the back of the phone.
+2. Unplug both the cables.
+3. Wait 30 seconds
+4. Plug the Ethernet cable back in, then the Power Cable.  
+5. Wait a couple minutes for the phone to power back on and boot up
+6. You can test by calling out or using another phone to call in.
+
+If in doubt you can disconnect all cables if you diagram where they go.
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/logo.png</media>

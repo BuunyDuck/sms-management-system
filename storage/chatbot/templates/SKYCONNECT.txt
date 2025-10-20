@@ -1,0 +1,36 @@
+
+SkyConnect
+Trouble Shooting:
+
+See graphic and choose your setup with or without POE to troubleshoot.
+
+The logical method is:
+
+Follow the cable from the radio outside to where it plugs in inside to the POE  or the router -->  see photo for your set up.
+
+Check for damage to the cables.
+
+Note where your cables connect (draw or take a photo).
+
+Never reset router with paper clip!
+
+To properly reboot: 
+Never reset router with paper clip! 
+
+Power off router and POE brick.
+
+ Disconnect cable to outside radio is also helpful. 
+
+Wait at least 2 full minutes or more until the POE light goes out. 
+Then reconnect all cables per the graphic. 
+
+Turn on Power and wait 5 minutes for reboot and do not power off again. 
+
+If you have Plumes or other Wifi extenders, check for power lights and cables connected to a LAN port.
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/4-POE-Setup.jpg</media>
+
+
+

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use App\Models\SmsMessage;
 use App\Services\TwilioService;
+use App\Services\ChatbotService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Http\Response;
@@ -12,7 +13,8 @@ use Illuminate\Http\Response;
 class WebhookController extends Controller
 {
     public function __construct(
-        private TwilioService $twilioService
+        private TwilioService $twilioService,
+        private ChatbotService $chatbotService
     ) {}
 
     /**
@@ -79,6 +81,80 @@ class WebhookController extends Controller
         echo "═══════════════════════════════════════════════\n";
         echo "\n";
 
+        // ========================================
+        // CHATBOT LOGIC
+        // ========================================
+        $chatbotResponse = null;
+        $shouldProcessNormally = true;
+
+        // Check if this is a MENU keyword (start chatbot)
+        if ($this->chatbotService->isMenuKeyword($message['body'])) {
+            Log::info('🤖 Chatbot MENU detected, starting session', ['from' => $message['from']]);
+            $chatbotResponse = $this->chatbotService->startSession($message['from']);
+            $shouldProcessNormally = false;
+        }
+        // Check if this is an EXIT keyword (end chatbot)
+        elseif ($this->chatbotService->isExitKeyword($message['body'])) {
+            Log::info('🤖 Chatbot EXIT detected, ending session', ['from' => $message['from']]);
+            $chatbotResponse = $this->chatbotService->endSession($message['from']);
+            $shouldProcessNormally = false;
+        }
+        // Check if there's an active chatbot session
+        elseif ($this->chatbotService->hasActiveSession($message['from'])) {
+            Log::info('🤖 Active chatbot session found, processing input', ['from' => $message['from'], 'input' => $message['body']]);
+            $chatbotResponse = $this->chatbotService->processInput($message['from'], $message['body']);
+            
+            // If response is empty, it means let normal processing handle it
+            if (empty($chatbotResponse)) {
+                Log::info('🤖 Chatbot returned empty response, continuing with normal processing');
+                $shouldProcessNormally = true;
+            } else {
+                $shouldProcessNormally = false;
+            }
+        }
+
+        // If chatbot should respond, send SMS and return early
+        if ($chatbotResponse) {
+            Log::info('🤖 Sending chatbot response', ['response_length' => strlen($chatbotResponse)]);
+            echo "🤖 CHATBOT RESPONDING\n";
+            
+            // Parse media tags from response
+            $parsed = $this->chatbotService->parseMediaTags($chatbotResponse);
+            $responseMessage = $parsed['message'];
+            $mediaUrl = $parsed['media_url'];
+            
+            // Send response via Twilio (reply from same number customer texted)
+            try {
+                $twilioResponse = $this->twilioService->sendSms(
+                    to: $message['from'],
+                    body: $responseMessage,
+                    from: $message['to'], // Reply from same number customer texted to
+                    mediaUrl: $mediaUrl
+                );
+                
+                Log::info('✅ Chatbot response sent', [
+                    'message_sid' => $twilioResponse['message_sid'],
+                    'to' => $message['from'],
+                    'from' => $message['to'],
+                    'has_media' => !empty($mediaUrl)
+                ]);
+                echo "✅ Chatbot response sent: {$twilioResponse['message_sid']}\n\n";
+                
+            } catch (\Exception $e) {
+                Log::error('❌ Failed to send chatbot response', [
+                    'error' => $e->getMessage(),
+                    'to' => $message['from'],
+                ]);
+                echo "❌ Chatbot send error: {$e->getMessage()}\n\n";
+            }
+            
+            // Still save the INBOUND message to database, but don't send email
+            // (The chatbot handled it)
+        }
+        // ========================================
+        // END CHATBOT LOGIC
+        // ========================================
+
         // Save to database
         try {
             // Prepare media URLs and types
@@ -122,8 +198,13 @@ class WebhookController extends Controller
             Log::info('✅ Message saved to database', ['message_sid' => $message['message_sid']]);
             echo "✅ Saved to database\n\n";
             
-            // Send email notification (matching ColdFusion logic)
-            $this->sendEmailNotification($message);
+            // Send email notification ONLY if not handled by chatbot
+            if ($shouldProcessNormally) {
+                $this->sendEmailNotification($message);
+            } else {
+                Log::info('⏭️ Skipping email notification (chatbot handled message)');
+                echo "⏭️ Skipping email (chatbot handled)\n\n";
+            }
             
         } catch (\Exception $e) {
             Log::error('❌ Failed to save message to database', [

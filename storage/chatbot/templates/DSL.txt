@@ -1,0 +1,28 @@
+
+DSL Trouble Shooting:
+
+DSL Modem:
+Disconnect phone line
+Power off
+Wait 60 seconds
+
+Connect phone line
+Turn on Power
+Wait 5 minutes for reboot
+
+DSL light: Solid
+Internet Light: blinking
+
+Should work now.
+
+If not, let us know:
+  DSL Light:
+  SOLID or FLASHING.
+Internet Light:
+   Blinks or Off
+
+Blinking DSL light means a wire could be disconnected in your house.  You can check that by taking the modem to the NID and testing there for a solid DSL light.
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/DSLLights.jpg</media>

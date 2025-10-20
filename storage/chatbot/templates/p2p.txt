@@ -1,0 +1,17 @@
+Please try this:
+
+PTP Point to Point Diagram
+
+Confirm POWER and Internet at your router.
+
+Trace cabling from the outside dishes to the POE as shown.
+
+Confirm power and connection lights on each side.
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335
+
+Send MENU or EXIT
+
+<media>http://dash.montanasky.net/sms/PTP.jpg</media>
