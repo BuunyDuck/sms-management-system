@@ -420,12 +420,10 @@
             @if($customerInfo)
                 <span class="agent-name">
                     👤 
-                    @if(!empty($customerInfo->fname) && !empty($customerInfo->lname))
-                        {{ $customerInfo->fname }} {{ $customerInfo->lname }}
-                    @elseif(!empty($customerInfo->name))
-                        {{ $customerInfo->name }}
-                    @elseif(!empty($customerInfo->Company))
-                        {{ $customerInfo->Company }}
+                    @if(!empty($customerInfo->NAME))
+                        {{ $customerInfo->NAME }}
+                    @elseif(!empty($customerInfo->first_name) && !empty($customerInfo->last_name))
+                        {{ $customerInfo->first_name }} {{ $customerInfo->last_name }}
                     @else
                         Customer
                     @endif
