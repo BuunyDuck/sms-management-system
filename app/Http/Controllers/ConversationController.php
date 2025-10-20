@@ -57,7 +57,7 @@ class ConversationController extends Controller
                     'contact_number' => $contactNumber,
                     'last_message_date' => $message->thetime,
                     'last_body' => $message->BODY,
-                    'is_inbound' => ($message->FROM !== $twilioNumber),
+                    'is_inbound' => (!in_array($message->FROM, $mtskyNumbers)),
                     'message_count' => 1,
                     'formatted_number' => $this->formatPhoneNumber($contactNumber),
                     'agent_name' => $message->fromname ?? 'System',
@@ -77,7 +77,7 @@ class ConversationController extends Controller
         
         // Get list of all agents for filter dropdown
         $agents = SmsMessage::where('thetime', '>=', $since)
-            ->where('FROM', $twilioNumber)
+            ->whereIn('FROM', $mtskyNumbers)
             ->whereNotNull('fromname')
             ->select('fromname')
             ->distinct()
