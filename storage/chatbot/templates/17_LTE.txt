@@ -1,0 +1,24 @@
+Please try this:
+
+SKY CONNECT  LTE WIRELESS
+
+Confirm connection by the diagram.
+
+Proper reboot:
+
+Unplug the power from the POE injector for 2 minutes
+
+Unplug WAN Data Cable from the router or the PoE injector
+
+Power off the router for two minutes.
+
+After two minutes plug the WAN data cable back in tight.
+
+Plug the power cords back in the router and the POE.
+
+Wait up to 6 minutes for it to properly reboot.
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335
+<media>http://dash.montanasky.net/sms/BEC-LTE-Reboot.png</media>

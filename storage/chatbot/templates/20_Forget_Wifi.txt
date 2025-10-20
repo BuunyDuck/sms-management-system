@@ -1,0 +1,9 @@
+ForgetWifi
+
+You can try Forgetting the Wifi network on those devices that do not connect:
+
+https://www.google.com/search?q=forget wifi network
+
+Power them down after that and try again.
+
+You will have re-enter your wifi password.

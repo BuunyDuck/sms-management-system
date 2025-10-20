@@ -178,7 +178,15 @@ class ChatbotService
         $response .= " 9  for Voip Phone\n";
         $response .= "10 for Plume Wifi\n";
         $response .= "11 for Fiber GPON\n";
-        $response .= "12 for Point to Points\n\n";
+        $response .= "12 for Point to Points\n";
+        $response .= "13 for IMAP Settings\n";
+        $response .= "14 for POP3 Settings\n";
+        $response .= "15 for DSL Walled Garden\n";
+        $response .= "16 for SkyConnect DHCP\n";
+        $response .= "17 for LTE\n";
+        $response .= "18 for MyAccount\n";
+        $response .= "19 for Lost Email\n";
+        $response .= "20 for Forget Wifi\n\n";
         $response .= "Send EXIT to Quit\n\n";
         $response .= "<media>http://dash.montanasky.net/sms/logo.png</media>";
 
@@ -231,6 +239,14 @@ class ChatbotService
             '10' => 'plume.txt',
             '11' => 'fiber.txt',
             '12' => 'p2p.txt',
+            '13' => '13_IMAP_Settings.txt',
+            '14' => '14_POP3_Settings.txt',
+            '15' => '15_DSL_Walled_Garden.txt',
+            '16' => '16_SkyConnect_DHCP.txt',
+            '17' => '17_LTE.txt',
+            '18' => '18_MyAccount.txt',
+            '19' => '19_Lost_Email.txt',
+            '20' => '20_Forget_Wifi.txt',
         ];
 
         // For now, just handle first level (main menu options)

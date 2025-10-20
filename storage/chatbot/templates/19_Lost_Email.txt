@@ -1,0 +1,21 @@
+Lost Email
+
+Check your junk, spam or trash email folders first.  Is the sender whitelisted in your Spamfilter?
+
+The only way to trace undelivered email is to get a copy of the header of bounce or returned message your sender gets back when they try to send to you.
+
+You can send us the full text when you get that and we can trace by sender, IP address, mail servers and block lists.
+
+If the sender is on a block list, they will have to get themselves removed from it.  If they are on a spam friendly or hacker friendly service, they might consider switching to a reputable host.  
+
+If you need to whitelist or block senders you can do that by logging into:
+
+https://spamfilter.montanasky.net/
+
+with your email address and email password.
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335
+
+<media>http://dash.montanasky.net/sms/Lost-EMail.jpg</media>

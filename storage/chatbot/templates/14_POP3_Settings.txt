@@ -1,0 +1,21 @@
+Type:
+
+POP3 USING SSL
+
+Incoming Server: mail.montanasky.net
+
+Incoming Port:995
+
+Outgoing Server: mail.montanasky.net
+
+Outgoing Port:465
+
+Username: youremail@address.com
+
+Password: ******
+
+http://selfhelp.montanasky.net
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335

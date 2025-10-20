@@ -1,0 +1,21 @@
+Type:
+
+IMAP USING SSL
+
+Incoming Server: mail.montanasky.net
+
+Incoming Port:993
+
+Outgoing Server: mail.montanasky.net
+
+Outgoing Port:465
+
+Username: abc123@abc123.com
+
+Password: ******
+
+http://selfhelp.montanasky.net[
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335

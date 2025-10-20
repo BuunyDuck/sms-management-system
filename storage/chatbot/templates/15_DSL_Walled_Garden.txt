@@ -1,0 +1,21 @@
+DSL Walled Garden Instructions
+
+The following instructions will help you if you are being redirected to the setup your service.These steps should be done from a laptop or desktop; often does not work from mobile devices. Unplug the power and phone cables and wait 2 minutes  then wait 2 more minutes after plugging both in again before attempting these instructions.
+
+Connect your computer or laptop to the router with an ethernet cable or connect to WiFi using the information listed on the side of the modem.
+
+1)  Go to http://connect.centurylink.com and click next (sometimes takes you there automatically)
+2)  Enter xxx-xxx-xxxx  for account number and  zip 59901
+3)  Select - I have the activation letter for my high-speed internet service - click continue
+4)  Enter  BAN# of 476035666 and xxx-xxx-xxxx as your account number again
+5)  Accept terms.
+6)  You may see additional screens about receiving notifications, additional services, changing wifi, etc. You should decline. DO NOT CHANGE THE WIFI DURING THE SETUP.
+7)  Select the model of modem  (see model number on the side)
+8)  This step SHOULD automatically configure the modem / router for you with the correct PPP username and password. However, if it does not, it will tell you what they are and give you instructions on how to manually enter them. Perform these steps if needed.
+9)  Continue and select NO to Norton or any other add-ons, then next
+
+Login to the modem again using the information on the side after these steps are completed and you are online. to change your wifi name and password.
+
+You can get these TEXTs anytime by sending
+MENU
+by text to 406-752-4335
