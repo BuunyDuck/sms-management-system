@@ -146,6 +146,7 @@
             display: flex;
             gap: 15px;
             flex-wrap: wrap;
+            margin-bottom: 40px;
         }
         
         .btn {
@@ -229,6 +230,22 @@
         </div>
         
         <div class="content">
+            <!-- Actions -->
+            <div class="actions">
+                @auth
+                    <a href="{{ route('conversations.index') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💬 Conversations</a>
+                    <a href="{{ route('conversations.compose') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📱 New Message</a>
+                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
+                        @csrf
+                        <button type="submit" class="btn btn-secondary">🚪 Logout</button>
+                    </form>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-primary">🔐 Login</a>
+                    <a href="{{ route('register') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">✨ Register</a>
+                @endauth
+                <a href="{{ route('test.db') }}" class="btn btn-secondary">🔗 Test Database</a>
+            </div>
+
             <!-- Server Info -->
             <div class="info-grid">
                 <div class="info-card">
@@ -266,6 +283,25 @@
                 </div>
             </div>
             
+            <!-- Auth Status -->
+            @auth
+                <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #10b981;">
+                    <p style="color: #166534; font-weight: 600; margin-bottom: 5px;">
+                        👋 Welcome back, {{ auth()->user()->name }}!
+                        @if(auth()->user()->is_admin)
+                            <span style="background: #fbbf24; color: #92400e; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 5px;">ADMIN</span>
+                        @endif
+                    </p>
+                    <p style="color: #166534; font-size: 0.9rem;">Last login: {{ auth()->user()->last_login_at ? auth()->user()->last_login_at->diffForHumans() : 'First time!' }}</p>
+                </div>
+            @else
+                <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #f59e0b;">
+                    <p style="color: #92400e; font-weight: 600;">
+                        🔐 Please login or register to access the SMS system
+                    </p>
+                </div>
+            @endauth
+
             <!-- Features Status -->
             <div class="features">
                 <h2>🚀 Features Status</h2>
@@ -303,41 +339,6 @@
                         <span>Customer Linking</span>
                     </div>
                 </div>
-            </div>
-            
-            <!-- Auth Status -->
-                    @auth
-                <div style="background: #f0fdf4; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #10b981;">
-                    <p style="color: #166534; font-weight: 600; margin-bottom: 5px;">
-                        👋 Welcome back, {{ auth()->user()->name }}!
-                        @if(auth()->user()->is_admin)
-                            <span style="background: #fbbf24; color: #92400e; padding: 3px 8px; border-radius: 6px; font-size: 11px; font-weight: 600; margin-left: 5px;">ADMIN</span>
-                        @endif
-                    </p>
-                    <p style="color: #166534; font-size: 0.9rem;">Last login: {{ auth()->user()->last_login_at ? auth()->user()->last_login_at->diffForHumans() : 'First time!' }}</p>
-                </div>
-            @else
-                <div style="background: #fef3c7; padding: 20px; border-radius: 10px; margin-bottom: 30px; border-left: 4px solid #f59e0b;">
-                    <p style="color: #92400e; font-weight: 600;">
-                        🔐 Please login or register to access the SMS system
-                    </p>
-                </div>
-            @endauth
-
-            <!-- Actions -->
-            <div class="actions">
-                @auth
-                    <a href="{{ route('conversations.index') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💬 Conversations</a>
-                    <a href="{{ route('conversations.compose') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📱 New Message</a>
-                    <form method="POST" action="{{ route('logout') }}" style="display: inline;">
-                        @csrf
-                        <button type="submit" class="btn btn-secondary">🚪 Logout</button>
-                    </form>
-                @else
-                    <a href="{{ route('login') }}" class="btn btn-primary">🔐 Login</a>
-                    <a href="{{ route('register') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">✨ Register</a>
-                @endauth
-                <a href="{{ route('test.db') }}" class="btn btn-secondary">🔗 Test Database</a>
             </div>
         </div>
 
