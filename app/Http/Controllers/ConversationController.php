@@ -53,6 +53,26 @@ class ConversationController extends Controller
             $contactNumber = (in_array($message->FROM, $mtskyNumbers)) ? $message->TO : $message->FROM;
             
             if (!isset($conversationsData[$contactNumber])) {
+                // Get customer info for this phone number
+                $last10 = substr(preg_replace('/[^0-9]/', '', $contactNumber), -10);
+                $customerInfo = null;
+                $customerName = null;
+                
+                $customerPhone = DB::table('cat_customer_to_phone')
+                    ->where('phone', $last10)
+                    ->orderBy('is_primary_record_for_cat_sms', 'DESC')
+                    ->first();
+                
+                if ($customerPhone) {
+                    $customer = DB::table('db_297_netcustomers')
+                        ->where('sku', $customerPhone->customer_sku)
+                        ->first();
+                    
+                    if ($customer && !empty($customer->NAME)) {
+                        $customerName = $customer->NAME;
+                    }
+                }
+                
                 $conversationsData[$contactNumber] = (object)[
                     'contact_number' => $contactNumber,
                     'last_message_date' => $message->thetime,
@@ -61,6 +81,7 @@ class ConversationController extends Controller
                     'message_count' => 1,
                     'formatted_number' => $this->formatPhoneNumber($contactNumber),
                     'agent_name' => $message->fromname ?? 'System',
+                    'customer_name' => $customerName,
                 ];
             } else {
                 $conversationsData[$contactNumber]->message_count++;

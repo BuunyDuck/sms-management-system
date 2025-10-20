@@ -349,9 +349,9 @@
                                     @endif
                                     {{ Str::limit($conversation->last_body ?? '(Media message)', 60) }}
                                 </div>
-                                @if($conversation->agent_name && $conversation->agent_name !== 'System')
+                                @if($conversation->customer_name)
                                     <div style="margin-top: 5px;">
-                                        <span class="agent-badge">{{ $conversation->agent_name }}</span>
+                                        <span class="agent-badge">👤 {{ $conversation->customer_name }}</span>
                                     </div>
                                 @endif
                             </div>
