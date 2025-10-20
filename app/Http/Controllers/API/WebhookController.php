@@ -126,10 +126,12 @@ class WebhookController extends Controller
             // Send response via Twilio (reply from same number customer texted)
             try {
                 $twilioResponse = $this->twilioService->sendSms(
-                    to: $message['from'],
-                    body: $responseMessage,
-                    from: $message['to'], // Reply from same number customer texted to
-                    mediaUrl: $mediaUrl
+                    $message['from'],  // to
+                    $responseMessage,  // body
+                    [
+                        'from' => $message['to'],  // Reply from same number customer texted to
+                        'mediaUrl' => $mediaUrl
+                    ]
                 );
                 
                 Log::info('✅ Chatbot response sent', [

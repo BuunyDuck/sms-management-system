@@ -30,7 +30,7 @@ class TwilioService
      *
      * @param string $to Phone number in E.164 format (+1234567890)
      * @param string $body Message content
-     * @param array $options Additional options (mediaUrl, statusCallback, etc.)
+     * @param array $options Additional options (from, mediaUrl, statusCallback, etc.)
      * @return array Response with success status and message details
      */
     public function sendSms(string $to, string $body, array $options = []): array
@@ -39,9 +39,12 @@ class TwilioService
             // Clean and validate phone number
             $to = $this->formatPhoneNumber($to);
             
+            // Determine FROM number (allow override via options)
+            $fromNumber = $options['from'] ?? $this->fromNumber;
+            
             // Prepare message data
             $messageData = [
-                'from' => $this->fromNumber,
+                'from' => $fromNumber,
                 'body' => $body,
             ];
 
@@ -61,7 +64,7 @@ class TwilioService
             // Log success
             Log::info('SMS Sent Successfully', [
                 'to' => $to,
-                'from' => $this->fromNumber,
+                'from' => $fromNumber,
                 'message_sid' => $message->sid,
                 'status' => $message->status,
                 'body_preview' => substr($body, 0, 50) . '...',
@@ -72,7 +75,7 @@ class TwilioService
                 'message_sid' => $message->sid,
                 'status' => $message->status,
                 'to' => $to,
-                'from' => $this->fromNumber,
+                'from' => $fromNumber,
                 'body' => $body,
             ];
 
