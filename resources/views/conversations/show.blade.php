@@ -418,7 +418,18 @@
         <div class="header-title">
             <strong>{{ $formattedNumber }}</strong>
             @if($customerInfo)
-                <span class="agent-name">👤 {{ auth()->user()->name }}</span>
+                <span class="agent-name">
+                    👤 
+                    @if(!empty($customerInfo->fname) && !empty($customerInfo->lname))
+                        {{ $customerInfo->fname }} {{ $customerInfo->lname }}
+                    @elseif(!empty($customerInfo->name))
+                        {{ $customerInfo->name }}
+                    @elseif(!empty($customerInfo->Company))
+                        {{ $customerInfo->Company }}
+                    @else
+                        Customer
+                    @endif
+                </span>
             @endif
         </div>
 
