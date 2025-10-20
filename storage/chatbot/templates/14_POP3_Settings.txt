@@ -16,6 +16,5 @@ Password: ******
 
 http://selfhelp.montanasky.net
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
+
+Send MENU or EXIT

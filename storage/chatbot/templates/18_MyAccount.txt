@@ -12,6 +12,5 @@ If you need instructions to log in to your Account:
 
 http://selfhelp.montanasky.net/account-center
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
+
+Send MENU or EXIT

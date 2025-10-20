@@ -14,8 +14,6 @@ https://spamfilter.montanasky.net/
 
 with your email address and email password.
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
 
 <media>http://dash.montanasky.net/sms/Lost-EMail.jpg</media>
+Send MENU or EXIT

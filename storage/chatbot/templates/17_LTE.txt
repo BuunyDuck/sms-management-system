@@ -18,7 +18,5 @@ Plug the power cords back in the router and the POE.
 
 Wait up to 6 minutes for it to properly reboot.
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
 <media>http://dash.montanasky.net/sms/BEC-LTE-Reboot.png</media>
+Send MENU or EXIT

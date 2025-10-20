@@ -21,7 +21,5 @@ Wait 5 minutes for reboot and do not power off again.
 
 If you have Plumes or other Wifi extenders, check for power lights and cables connected to a LAN port.
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
 <media>http://dash.montanasky.net/sms/4-POE-Setup.jpg</media>
+Send MENU or EXIT

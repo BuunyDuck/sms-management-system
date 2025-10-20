@@ -16,6 +16,5 @@ Connect your computer or laptop to the router with an ethernet cable or connect 
 
 Login to the modem again using the information on the side after these steps are completed and you are online. to change your wifi name and password.
 
-You can get these TEXTs anytime by sending
-MENU
-by text to 406-752-4335
+
+Send MENU or EXIT
