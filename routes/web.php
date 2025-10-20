@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ConversationController;
+use App\Http\Controllers\ChatbotAnalyticsController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -59,6 +60,9 @@ Route::middleware('auth')->group(function () {
     Route::get('/send', function () {
         return view('sms-test');
     })->name('send');
+    
+    // Chatbot Analytics (protected)
+    Route::get('/analytics/chatbot', [ChatbotAnalyticsController::class, 'index'])->name('analytics.chatbot');
 });
 
 // Proxy for quick response templates (to avoid CORS) - accessible without auth

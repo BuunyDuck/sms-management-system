@@ -232,14 +232,15 @@
         <div class="content">
             <!-- Actions -->
             <div class="actions">
-                @auth
+                    @auth
                     <a href="{{ route('conversations.index') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💬 Conversations</a>
                     <a href="{{ route('conversations.compose') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📱 New Message</a>
+                    <a href="{{ route('analytics.chatbot') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📊 Chatbot Analytics</a>
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="btn btn-secondary">🚪 Logout</button>
                     </form>
-                @else
+                    @else
                     <a href="{{ route('login') }}" class="btn btn-primary">🔐 Login</a>
                     <a href="{{ route('register') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">✨ Register</a>
                 @endauth
@@ -330,9 +331,13 @@
                         <span class="feature-icon">✓</span>
                         <span>Conversation History</span>
                     </div>
-                    <div class="feature-item pending">
-                        <span class="feature-icon">⏳</span>
+                    <div class="feature-item ready">
+                        <span class="feature-icon">✓</span>
                         <span>Chatbot System</span>
+                    </div>
+                    <div class="feature-item ready">
+                        <span class="feature-icon">✓</span>
+                        <span>Chatbot Analytics</span>
                     </div>
                     <div class="feature-item pending">
                         <span class="feature-icon">⏳</span>
