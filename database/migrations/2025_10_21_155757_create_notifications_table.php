@@ -24,10 +24,11 @@ return new class extends Migration
             $table->timestamps();
             
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
-            $table->foreign('message_id')->references('id')->on('cat_sms')->onDelete('set null');
+            // Foreign key to cat_sms removed - column types may not match
             
             $table->index(['user_id', 'read', 'created_at']);
             $table->index('phone_number');
+            $table->index('message_id');
         });
     }
 
