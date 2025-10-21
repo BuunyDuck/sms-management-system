@@ -236,6 +236,17 @@
             border-radius: 12px;
         }
 
+        .agent-badge {
+            background: #d6bcfa;
+            color: #553c9a;
+            padding: 3px 8px;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            display: inline-block;
+            margin-bottom: 6px;
+        }
+
         .compose-area {
             background: white;
             padding: 15px 20px;
@@ -522,6 +533,9 @@
             <div class="message {{ $message->isInbound() ? 'message-inbound' : 'message-outbound' }}" @if($isLastMessage) id="last-message" @endif data-message-id="{{ $message->id }}">
                 <input type="checkbox" class="message-checkbox" value="{{ $message->id }}" style="margin-right: 8px; cursor: pointer;">
                 <div class="message-bubble">
+                    @if($message->isOutbound() && $message->fromname)
+                        <span class="agent-badge">{{ $message->fromname }}</span>
+                    @endif
                     @php
                         // Strip <media> tags from display
                         $displayBody = preg_replace('/<media>.*?<\/media>/s', '', $message->BODY);
