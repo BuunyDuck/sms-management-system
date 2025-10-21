@@ -611,30 +611,15 @@
             @csrf
             <input type="file" id="file-input-conversation" name="media_file" accept="image/*,video/*" style="display: none;">
             <div class="compose-input-wrapper">
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;">
+                <div style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 8px; gap: 10px;">
                     <div style="display: flex; gap: 12px; align-items: center;">
                         <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
                         <a href="#" onclick="document.getElementById('file-input-conversation').click(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">📎 Attach File</a>
+                        <a href="#" id="send-to-support-btn" onclick="toggleSendToSupport(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500; cursor: pointer;">
+                            <span id="support-icon">📧</span>
+                            <span>Send to Support</span>
+                        </a>
                     </div>
-                    <button type="button" id="send-to-support-btn" onclick="toggleSendToSupport()" style="
-                        background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
-                        color: white;
-                        border: none;
-                        padding: 8px 16px;
-                        border-radius: 20px;
-                        font-size: 13px;
-                        font-weight: 600;
-                        cursor: pointer;
-                        transition: all 0.3s;
-                        display: flex;
-                        align-items: center;
-                        gap: 6px;
-                        box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
-                    ">
-                        <span id="support-icon">📧</span>
-                        <span>Send to Support</span>
-                        <span id="support-check" style="display: none; font-size: 16px;">✓</span>
-                    </button>
                 </div>
                 <textarea 
                     name="body" 
@@ -902,22 +887,20 @@
             }, 0);
         }
 
-        // Send to Support toggle functionality (use server value)
+        // Send to Support toggle functionality (simple text link style)
         let sendToSupportEnabled = {{ $sendToSupport ? 'true' : 'false' }};
         
         function toggleSendToSupport() {
             sendToSupportEnabled = !sendToSupportEnabled;
             
-            const btn = document.getElementById('send-to-support-btn');
+            const link = document.getElementById('send-to-support-btn');
             const icon = document.getElementById('support-icon');
-            const check = document.getElementById('support-check');
             
             if (sendToSupportEnabled) {
-                // Active state - show checkmark
-                btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
-                btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
-                icon.style.display = 'none';
-                check.style.display = 'inline';
+                // Active state - green color and checkmark
+                link.style.color = '#34c759';
+                link.style.fontWeight = '600';
+                icon.textContent = '✓';
                 
                 // Save to localStorage
                 localStorage.setItem('sendToSupport_{{ $phoneNumber }}', 'true');
@@ -932,11 +915,10 @@
                     body: JSON.stringify({ enabled: true })
                 });
             } else {
-                // Inactive state - show icon
-                btn.style.background = 'linear-gradient(135deg, #007aff 0%, #0051d5 100%)';
-                btn.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
-                icon.style.display = 'inline';
-                check.style.display = 'none';
+                // Inactive state - blue color and email icon
+                link.style.color = '#007aff';
+                link.style.fontWeight = '500';
+                icon.textContent = '📧';
                 
                 // Save to localStorage
                 localStorage.setItem('sendToSupport_{{ $phoneNumber }}', 'false');
@@ -953,16 +935,14 @@
             }
         }
         
-        // Initialize button state on page load
+        // Initialize link state on page load
         if (sendToSupportEnabled) {
-            const btn = document.getElementById('send-to-support-btn');
+            const link = document.getElementById('send-to-support-btn');
             const icon = document.getElementById('support-icon');
-            const check = document.getElementById('support-check');
             
-            btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
-            btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
-            icon.style.display = 'none';
-            check.style.display = 'inline';
+            link.style.color = '#34c759';
+            link.style.fontWeight = '600';
+            icon.textContent = '✓';
         }
 
         // File input handler
