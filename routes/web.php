@@ -43,6 +43,11 @@ Route::get('/test-db', function () {
 
 // Authenticated routes
 Route::middleware('auth')->group(function () {
+    // Dashboard (redirect to welcome page)
+    Route::get('/dashboard', function () {
+        return view('welcome');
+    })->name('dashboard');
+    
     // Profile routes
     Route::get('/profile', [ProfileController::class, 'edit'])->name('profile.edit');
     Route::patch('/profile', [ProfileController::class, 'update'])->name('profile.update');
