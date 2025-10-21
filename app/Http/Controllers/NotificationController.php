@@ -9,43 +9,16 @@ use Illuminate\Http\Request;
 class NotificationController extends Controller
 {
     /**
-     * Get all notifications for the current user
+     * Get all unread notifications for the current user
      */
     public function index(Request $request): JsonResponse
     {
-        $user = auth()->user();
-        
-        // Get unread count
-        $unreadCount = Notification::where('user_id', $user->id)
-            ->unread()
-            ->count();
-        
-        // Get recent notifications (last 24 hours or unread)
-        $notifications = Notification::where('user_id', $user->id)
-            ->where(function ($query) {
-                $query->where('read', false)
-                      ->orWhere('created_at', '>=', now()->subDay());
-            })
+        $notifications = Notification::where('user_id', auth()->id())
+            ->where('read', false)
             ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get()
-            ->map(function ($notification) {
-                return [
-                    'id' => $notification->id,
-                    'type' => $notification->type,
-                    'phone_number' => $notification->phone_number,
-                    'customer_name' => $notification->customer_name,
-                    'message_preview' => $notification->message_preview,
-                    'read' => $notification->read,
-                    'time_ago' => $notification->time_ago,
-                    'created_at' => $notification->created_at->toIso8601String(),
-                ];
-            });
+            ->get();
         
-        return response()->json([
-            'unread_count' => $unreadCount,
-            'notifications' => $notifications,
-        ]);
+        return response()->json($notifications);
     }
 
     /**
