@@ -325,30 +325,15 @@
                 
                 <div class="compose-input-wrapper">
                     <!-- Quick Responses, Attach File, Send to Support Row -->
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; gap: 10px;">
+                    <div style="display: flex; justify-content: flex-start; align-items: center; margin-bottom: 8px; gap: 10px;">
                         <div style="display: flex; gap: 12px; align-items: center;">
                             <a href="#" onclick="document.getElementById('quick-responses').style.display='block'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">⚡ Quick Responses</a>
                             <a href="#" onclick="document.getElementById('file-input').click(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500;">📎 Attach File</a>
+                            <a href="#" id="send-to-support-toggle" onclick="toggleSendToSupport(); return false;" style="color: #007aff; text-decoration: none; font-size: 12px; font-weight: 500; cursor: pointer;">
+                                <span id="support-icon">📧</span>
+                                <span>Send to Support</span>
+                            </a>
                         </div>
-                        <button type="button" id="send-to-support-toggle" onclick="toggleSendToSupport()" style="
-                            background: linear-gradient(135deg, #007aff 0%, #0051d5 100%);
-                            color: white;
-                            border: none;
-                            padding: 8px 16px;
-                            border-radius: 20px;
-                            font-size: 13px;
-                            font-weight: 600;
-                            cursor: pointer;
-                            transition: all 0.3s;
-                            display: flex;
-                            align-items: center;
-                            gap: 6px;
-                            box-shadow: 0 2px 8px rgba(0, 122, 255, 0.3);
-                        ">
-                            <span id="support-icon">📧</span>
-                            <span>Send to Support</span>
-                            <span id="support-check" style="display: none; font-size: 16px;">✓</span>
-                        </button>
                     </div>
                     
                     <!-- Message Textarea -->
@@ -420,30 +405,27 @@
             updateSendButton();
         }
         
-        // Send to Support toggle (match conversation page)
+        // Send to Support toggle (simple text link style)
         let sendToSupportEnabled = false;
         
         function toggleSendToSupport() {
             sendToSupportEnabled = !sendToSupportEnabled;
             
-            const btn = document.getElementById('send-to-support-toggle');
+            const link = document.getElementById('send-to-support-toggle');
             const icon = document.getElementById('support-icon');
-            const check = document.getElementById('support-check');
             const field = document.getElementById('send-to-support-field');
             
             if (sendToSupportEnabled) {
-                // Active state - show checkmark
-                btn.style.background = 'linear-gradient(135deg, #34c759 0%, #2da846 100%)';
-                btn.style.boxShadow = '0 2px 8px rgba(52, 199, 89, 0.4)';
-                icon.style.display = 'none';
-                check.style.display = 'inline';
+                // Active state - green color and checkmark
+                link.style.color = '#34c759';
+                link.style.fontWeight = '600';
+                icon.textContent = '✓';
                 field.value = '1';
             } else {
-                // Inactive state - show email icon
-                btn.style.background = 'linear-gradient(135deg, #007aff 0%, #0051d5 100%)';
-                btn.style.boxShadow = '0 2px 8px rgba(0, 122, 255, 0.3)';
-                icon.style.display = 'inline';
-                check.style.display = 'none';
+                // Inactive state - blue color and email icon
+                link.style.color = '#007aff';
+                link.style.fontWeight = '500';
+                icon.textContent = '📧';
                 field.value = '0';
             }
         }
