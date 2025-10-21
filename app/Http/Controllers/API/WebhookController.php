@@ -211,6 +211,54 @@ class WebhookController extends Controller
             Log::info('✅ Message saved to database', ['message_sid' => $message['message_sid']]);
             echo "✅ Saved to database\n\n";
             
+            // Create notification for last agent (only for non-bot interactions)
+            if ($shouldProcessNormally && !empty($message['from'])) {
+                try {
+                    $preference = \DB::table('conversation_preferences')
+                        ->where('phone_number', $message['from'])
+                        ->first();
+                    
+                    if ($preference && $preference->last_agent_id) {
+                        // Get customer name for better notification
+                        $last10 = substr(preg_replace('/[^0-9]/', '', $message['from']), -10);
+                        $customerPhone = \DB::table('cat_customer_to_phone')
+                            ->where('phone', $last10)
+                            ->orderBy('is_primary_record_for_cat_sms', 'DESC')
+                            ->first();
+                        
+                        $customerName = null;
+                        if ($customerPhone) {
+                            $customer = \DB::table('db_297_netcustomers')
+                                ->where('sku', $customerPhone->customer_sku)
+                                ->first();
+                            if ($customer && !empty($customer->NAME)) {
+                                $customerName = $customer->NAME;
+                            }
+                        }
+                        
+                        // Create notification
+                        \App\Models\Notification::create([
+                            'user_id' => $preference->last_agent_id,
+                            'type' => 'customer_reply',
+                            'phone_number' => $message['from'],
+                            'customer_name' => $customerName,
+                            'message_preview' => \Str::limit($message['body'], 100),
+                            'message_id' => $savedMessage->id,
+                            'read' => false,
+                        ]);
+                        
+                        Log::info('📬 Notification created for agent', [
+                            'agent_id' => $preference->last_agent_id,
+                            'agent_name' => $preference->last_agent_name,
+                            'phone' => $message['from'],
+                        ]);
+                        echo "📬 Notification created for " . $preference->last_agent_name . "\n\n";
+                    }
+                } catch (\Exception $e) {
+                    Log::warning('Failed to create notification', ['error' => $e->getMessage()]);
+                }
+            }
+            
             // Log bot interaction to analytics if it was a chatbot message
             if (!$shouldProcessNormally && isset($chatbotResponse)) {
                 try {

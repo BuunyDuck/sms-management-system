@@ -3,6 +3,7 @@
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\ConversationController;
 use App\Http\Controllers\ChatbotAnalyticsController;
+use App\Http\Controllers\NotificationController;
 use Illuminate\Support\Facades\Route;
 
 // Public routes
@@ -63,6 +64,12 @@ Route::middleware('auth')->group(function () {
     
     // Chatbot Analytics (protected)
     Route::get('/analytics/chatbot', [ChatbotAnalyticsController::class, 'index'])->name('analytics.chatbot');
+    
+    // Notifications (protected)
+    Route::get('/api/notifications', [NotificationController::class, 'index'])->name('notifications.index');
+    Route::post('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
+    Route::post('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
+    Route::delete('/api/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
 });
 
 // Proxy for quick response templates (to avoid CORS) - accessible without auth

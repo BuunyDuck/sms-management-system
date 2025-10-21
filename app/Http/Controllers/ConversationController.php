@@ -316,6 +316,16 @@ class ConversationController extends Controller
                     'user_id' => auth()->id(),
                 ]);
 
+                // Update last agent for this conversation
+                DB::table('conversation_preferences')->updateOrInsert(
+                    ['phone_number' => $phoneNumber],
+                    [
+                        'last_agent_id' => auth()->id(),
+                        'last_agent_name' => auth()->user()->name,
+                        'updated_at' => now(),
+                    ]
+                );
+
                 Log::info('✅ Outbound message saved to database from conversation', ['message_sid' => $result['message_sid']]);
             } catch (\Exception $e) {
                 Log::error('❌ Failed to save outbound message to database', [
@@ -659,6 +669,16 @@ class ConversationController extends Controller
                     'replies_to_support' => $repliesToSupport,
                     'user_id' => auth()->id(),
                 ]);
+
+                // Update last agent for this conversation
+                DB::table('conversation_preferences')->updateOrInsert(
+                    ['phone_number' => $phoneNumber],
+                    [
+                        'last_agent_id' => auth()->id(),
+                        'last_agent_name' => auth()->user()->name,
+                        'updated_at' => now(),
+                    ]
+                );
 
                 Log::info('✅ Message sent from compose page', ['message_sid' => $result['message_sid']]);
             } catch (\Exception $e) {
