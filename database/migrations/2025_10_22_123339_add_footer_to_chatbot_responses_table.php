@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('chatbot_responses', function (Blueprint $table) {
-            $table->text('footer')->nullable()->after('message')->default('™');
+            $table->text('footer')->nullable()->after('message');
         });
         
         // Set default footer for all existing responses
