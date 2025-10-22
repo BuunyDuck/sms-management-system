@@ -248,8 +248,77 @@ class ChatbotService
             return $this->loadTemplateFromFile($menuNumber);
         }
 
-        // Return full message with footer and media tag (for chatbot)
-        return $response->full_message_with_footer;
+        // Get the full message with footer
+        $message = $response->full_message_with_footer;
+        
+        // Process dynamic includes if URL is set
+        if (!empty($response->include_url)) {
+            $message = $this->processDynamicIncludes($message, $response->include_url);
+        }
+
+        return $message;
+    }
+
+    /**
+     * Process dynamic includes by fetching URL content and replacing placeholder
+     */
+    protected function processDynamicIncludes(string $message, string $url): string
+    {
+        // Check if message contains the placeholder
+        if (!str_contains($message, '{CHATBOT_INCLUDE}')) {
+            Log::info('🔗 Include URL set but no placeholder found', ['url' => $url]);
+            return $message;
+        }
+
+        try {
+            Log::info('🔗 Fetching dynamic include content', ['url' => $url]);
+            
+            // Fetch content from URL with timeout
+            $context = stream_context_create([
+                'http' => [
+                    'timeout' => 10, // 10 seconds timeout
+                    'method' => 'GET',
+                    'header' => 'User-Agent: MontanaSky-SMS-Chatbot/1.0',
+                ],
+            ]);
+            
+            $content = @file_get_contents($url, false, $context);
+            
+            if ($content === false) {
+                Log::error('❌ Failed to fetch include URL', ['url' => $url]);
+                return str_replace(
+                    '{CHATBOT_INCLUDE}',
+                    '[Content unavailable]',
+                    $message
+                );
+            }
+            
+            // Trim and clean content
+            $content = trim($content);
+            
+            // Replace placeholder
+            $processedMessage = str_replace('{CHATBOT_INCLUDE}', $content, $message);
+            
+            Log::info('✅ Dynamic include processed', [
+                'url' => $url,
+                'content_length' => strlen($content),
+            ]);
+            
+            return $processedMessage;
+            
+        } catch (\Exception $e) {
+            Log::error('❌ Exception while fetching include URL', [
+                'url' => $url,
+                'error' => $e->getMessage(),
+            ]);
+            
+            // Replace with error message
+            return str_replace(
+                '{CHATBOT_INCLUDE}',
+                '[Content unavailable]',
+                $message
+            );
+        }
     }
 
     /**

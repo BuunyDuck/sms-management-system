@@ -57,6 +57,7 @@ class ChatbotAdminController extends Controller
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',
+            'include_url' => 'nullable|url|max:500',
             'image_path' => 'nullable|string', // Path from image library
             'active' => 'boolean',
         ]);
@@ -105,6 +106,7 @@ class ChatbotAdminController extends Controller
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',
+            'include_url' => 'nullable|url|max:500',
             'image_path' => 'nullable|string', // Path from image library
             'active' => 'boolean',
         ]);

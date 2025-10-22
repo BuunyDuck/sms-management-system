@@ -74,6 +74,23 @@
                             </div>
                         </div>
 
+                        <!-- Include URL -->
+                        <div class="mb-6">
+                            <label for="include_url" class="block text-sm font-medium text-gray-700 mb-2">
+                                Dynamic Include URL (Optional)
+                            </label>
+                            <input type="url" name="include_url" id="include_url" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="https://example.com/api/content" value="{{ old('include_url', $chatbotResponse->include_url) }}">
+                            @error('include_url')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500">
+                                Add <code class="bg-gray-100 px-1 rounded">{CHATBOT_INCLUDE}</code> in your message where you want the URL content inserted. The URL will be fetched fresh every time.
+                            </p>
+                            <div class="mt-2 p-3 bg-blue-50 rounded text-sm text-blue-800">
+                                <strong>💡 Example:</strong> Use this to include dynamic data like account balances, status updates, or personalized content from your API.
+                            </div>
+                        </div>
+
                         <!-- Image Picker -->
                         <div class="mb-6">
                             <label for="image_path" class="block text-sm font-medium text-gray-700 mb-2">

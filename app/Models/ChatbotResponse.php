@@ -12,6 +12,7 @@ class ChatbotResponse extends Model
         'title',
         'message',
         'footer',
+        'include_url',
         'template_file',
         'image_path',
         'active',
