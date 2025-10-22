@@ -267,6 +267,9 @@
                     <a href="{{ route('conversations.index') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">💬 Conversations</a>
                     <a href="{{ route('conversations.compose') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📱 New Message</a>
                     <a href="{{ route('analytics.chatbot') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📊 Chatbot Analytics</a>
+                    @if(auth()->user()->is_admin)
+                        <a href="{{ route('admin.chatbot.index') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">⚙️ Admin Panel</a>
+                    @endif
                     <form method="POST" action="{{ route('logout') }}" style="display: inline;">
                         @csrf
                         <button type="submit" class="btn btn-secondary">🚪 Logout</button>

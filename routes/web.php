@@ -76,6 +76,18 @@ Route::middleware('auth')->group(function () {
     Route::post('/api/notifications/{id}/read', [NotificationController::class, 'markAsRead'])->name('notifications.read');
     Route::post('/api/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read-all');
     Route::delete('/api/notifications/{id}', [NotificationController::class, 'destroy'])->name('notifications.destroy');
+    
+    // Chatbot Admin (admin only - checked in controller)
+    Route::prefix('admin/chatbot')->name('admin.chatbot.')->group(function () {
+        Route::get('/', [\App\Http\Controllers\ChatbotAdminController::class, 'index'])->name('index');
+        Route::get('/create', [\App\Http\Controllers\ChatbotAdminController::class, 'create'])->name('create');
+        Route::post('/', [\App\Http\Controllers\ChatbotAdminController::class, 'store'])->name('store');
+        Route::get('/{chatbotResponse}/edit', [\App\Http\Controllers\ChatbotAdminController::class, 'edit'])->name('edit');
+        Route::put('/{chatbotResponse}', [\App\Http\Controllers\ChatbotAdminController::class, 'update'])->name('update');
+        Route::delete('/{chatbotResponse}', [\App\Http\Controllers\ChatbotAdminController::class, 'destroy'])->name('destroy');
+        Route::post('/preview', [\App\Http\Controllers\ChatbotAdminController::class, 'preview'])->name('preview');
+        Route::post('/reorder', [\App\Http\Controllers\ChatbotAdminController::class, 'reorder'])->name('reorder');
+    });
 });
 
 // Proxy for quick response templates (to avoid CORS) - accessible without auth

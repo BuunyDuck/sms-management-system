@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use App\Models\BotSession;
+use App\Models\ChatbotResponse;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +14,7 @@ use Illuminate\Support\Facades\Log;
  * - Keyword detection (MENU, EXIT)
  * - Session management
  * - Menu navigation
- * - Template loading
+ * - Template loading from database
  * - Media parsing
  */
 class ChatbotService
@@ -162,32 +163,26 @@ class ChatbotService
     }
 
     /**
-     * Get the main menu response
+     * Get the main menu response (from database)
      */
     protected function getMainMenuResponse(): string
     {
+        // Fetch all active responses from database
+        $responses = ChatbotResponse::active()->ordered()->get();
+        
+        if ($responses->isEmpty()) {
+            // Fallback if no responses in database
+            return "BOT: Chatbot is currently unavailable. Please contact support. Send EXIT to quit.";
+        }
+        
         $response = "BOT:\nSend for Issue:\n";
-        $response .= " 1  for SkyConnect\n";
-        $response .= " 2  for DSL\n";
-        $response .= " 3  for Cable\n";
-        $response .= " 4  for Email\n";
-        $response .= " 5  for Outages\n";
-        $response .= " 6  for Speedtest\n";
-        $response .= " 7  for Payments\n";
-        $response .= " 8  for MontanaSkyTV\n";
-        $response .= " 9  for Voip Phone\n";
-        $response .= "10 for Plume Wifi\n";
-        $response .= "11 for Fiber GPON\n";
-        $response .= "12 for Point to Points\n";
-        $response .= "13 for IMAP Settings\n";
-        $response .= "14 for POP3 Settings\n";
-        $response .= "15 for DSL Walled Garden\n";
-        $response .= "16 for SkyConnect DHCP\n";
-        $response .= "17 for LTE\n";
-        $response .= "18 for MyAccount\n";
-        $response .= "19 for Lost Email\n";
-        $response .= "20 for Forget Wifi\n\n";
-        $response .= "Send EXIT to Quit\n\n";
+        
+        foreach ($responses as $item) {
+            $number = str_pad($item->menu_number, 2, ' ', STR_PAD_LEFT);
+            $response .= "{$number} for {$item->title}\n";
+        }
+        
+        $response .= "\nSend EXIT to Quit\n\n";
         $response .= "<media>http://dash.montanasky.net/sms/logo.png</media>";
 
         return $response;
@@ -227,11 +222,42 @@ class ChatbotService
     }
 
     /**
-     * Get template content for a menu path
+     * Get template content for a menu path (from database)
      */
     protected function getTemplateForPath(array $path): ?string
     {
-        // Map options to template files
+        // For now, just handle first level (main menu options)
+        // Submenus will be added in refinement
+        $menuNumber = $path[0] ?? null;
+
+        if (!$menuNumber) {
+            return null;
+        }
+
+        // Fetch response from database
+        $response = ChatbotResponse::where('menu_number', $menuNumber)
+            ->where('active', true)
+            ->first();
+
+        if (!$response) {
+            Log::warning('Chatbot response not found or inactive', [
+                'menu_number' => $menuNumber,
+            ]);
+            
+            // Fallback to template files if database doesn't have it yet
+            return $this->loadTemplateFromFile($menuNumber);
+        }
+
+        // Return full message with media tag if image exists
+        return $response->full_message;
+    }
+
+    /**
+     * Load a template file (fallback for migration period)
+     */
+    protected function loadTemplateFromFile(string $menuNumber): ?string
+    {
+        // Map options to template files (legacy fallback)
         $templates = [
             '1' => 'SKYCONNECT.txt',
             '2' => 'DSL.txt',
@@ -254,23 +280,12 @@ class ChatbotService
             '19' => '19_Lost_Email.txt',
             '20' => '20_Forget_Wifi.txt',
         ];
-
-        // For now, just handle first level (main menu options)
-        // Submenus will be added in refinement
-        $firstOption = $path[0] ?? null;
-
-        if (!$firstOption || !isset($templates[$firstOption])) {
+        
+        if (!isset($templates[$menuNumber])) {
             return null;
         }
-
-        return $this->loadTemplate($templates[$firstOption]);
-    }
-
-    /**
-     * Load a template file
-     */
-    protected function loadTemplate(string $filename): ?string
-    {
+        
+        $filename = $templates[$menuNumber];
         $filepath = $this->templatePath . '/' . $filename;
 
         if (!File::exists($filepath)) {
