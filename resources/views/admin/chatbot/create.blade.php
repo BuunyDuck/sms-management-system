@@ -83,22 +83,26 @@
                             </div>
                         </div>
 
-                        <!-- Image Upload -->
+                        <!-- Image Picker -->
                         <div class="mb-6">
-                            <label for="image" class="block text-sm font-medium text-gray-700 mb-2">
+                            <label for="image_path" class="block text-sm font-medium text-gray-700 mb-2">
                                 Image (Optional)
                             </label>
-                            <input type="file" name="image" id="image" accept="image/*" class="mt-1 block w-full text-sm text-gray-500
-                                file:mr-4 file:py-2 file:px-4
-                                file:rounded-md file:border-0
-                                file:text-sm file:font-semibold
-                                file:bg-blue-50 file:text-blue-700
-                                hover:file:bg-blue-100">
-                            @error('image')
+                            <select name="image_path" id="image_path" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" onchange="previewImage()">
+                                <option value="">No image</option>
+                                <!-- Will be populated by JavaScript -->
+                            </select>
+                            @error('image_path')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
-                            <p class="mt-1 text-xs text-gray-500">
-                                JPG, PNG, GIF. Max 5MB. Image will be sent as MMS attachment.
+                            
+                            <!-- Image Preview -->
+                            <div id="image-preview" class="mt-3 hidden">
+                                <img id="preview-img" src="" alt="Preview" class="max-w-xs max-h-48 rounded border">
+                            </div>
+                            
+                            <p class="mt-2 text-xs text-gray-500">
+                                Select an image from the library. <a href="{{ route('admin.chatbot.images.index') }}" target="_blank" class="text-blue-600 hover:text-blue-800">🖼️ Manage Image Library</a>
                             </p>
                         </div>
 
@@ -124,5 +128,37 @@
             </div>
         </div>
     </div>
+
+    <script>
+        // Load images from library
+        fetch('{{ route('admin.chatbot.images.list') }}')
+            .then(response => response.json())
+            .then(images => {
+                const select = document.getElementById('image_path');
+                images.forEach(image => {
+                    const option = document.createElement('option');
+                    option.value = image.path;
+                    option.textContent = image.filename;
+                    option.dataset.url = image.url;
+                    select.appendChild(option);
+                });
+            })
+            .catch(error => console.error('Error loading images:', error));
+
+        // Preview selected image
+        function previewImage() {
+            const select = document.getElementById('image_path');
+            const preview = document.getElementById('image-preview');
+            const previewImg = document.getElementById('preview-img');
+            
+            if (select.value) {
+                const selectedOption = select.options[select.selectedIndex];
+                previewImg.src = selectedOption.dataset.url;
+                preview.classList.remove('hidden');
+            } else {
+                preview.classList.add('hidden');
+            }
+        }
+    </script>
 </x-app-layout>
 

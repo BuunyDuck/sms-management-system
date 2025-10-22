@@ -57,18 +57,12 @@ class ChatbotAdminController extends Controller
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
+            'image_path' => 'nullable|string', // Path from image library
             'active' => 'boolean',
         ]);
 
         $validated['active'] = $request->has('active');
         $validated['display_order'] = $validated['menu_number']; // Default to menu number
-
-        // Handle image upload
-        if ($request->hasFile('image')) {
-            $path = $request->file('image')->store('chatbot-images', 'public');
-            $validated['image_path'] = $path;
-        }
 
         $response = ChatbotResponse::create($validated);
 
@@ -111,28 +105,11 @@ class ChatbotAdminController extends Controller
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',
-            'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
-            'remove_image' => 'boolean',
+            'image_path' => 'nullable|string', // Path from image library
             'active' => 'boolean',
         ]);
 
         $validated['active'] = $request->has('active');
-
-        // Handle image removal
-        if ($request->input('remove_image')) {
-            $chatbotResponse->deleteImage();
-            $validated['image_path'] = null;
-        }
-
-        // Handle new image upload
-        if ($request->hasFile('image')) {
-            // Delete old image
-            $chatbotResponse->deleteImage();
-            
-            // Upload new image
-            $path = $request->file('image')->store('chatbot-images', 'public');
-            $validated['image_path'] = $path;
-        }
 
         $chatbotResponse->update($validated);
 
