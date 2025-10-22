@@ -46,8 +46,8 @@ class ChatbotResponse extends Model
     {
         $message = $this->message;
         
-        if ($this->image_path && Storage::exists($this->image_path)) {
-            $imageUrl = Storage::url($this->image_path);
+        if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
+            $imageUrl = Storage::disk('public')->url($this->image_path);
             $message .= "\n\n<media>{$imageUrl}</media>";
         }
         
@@ -63,8 +63,8 @@ class ChatbotResponse extends Model
             return null;
         }
         
-        return Storage::exists($this->image_path) 
-            ? Storage::url($this->image_path) 
+        return Storage::disk('public')->exists($this->image_path) 
+            ? Storage::disk('public')->url($this->image_path) 
             : null;
     }
 
@@ -73,8 +73,8 @@ class ChatbotResponse extends Model
      */
     public function deleteImage(): bool
     {
-        if ($this->image_path && Storage::exists($this->image_path)) {
-            return Storage::delete($this->image_path);
+        if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
+            return Storage::disk('public')->delete($this->image_path);
         }
         
         return false;
