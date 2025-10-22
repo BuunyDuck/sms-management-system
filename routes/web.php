@@ -82,17 +82,19 @@ Route::middleware('auth')->group(function () {
         Route::get('/', [\App\Http\Controllers\ChatbotAdminController::class, 'index'])->name('index');
         Route::get('/create', [\App\Http\Controllers\ChatbotAdminController::class, 'create'])->name('create');
         Route::post('/', [\App\Http\Controllers\ChatbotAdminController::class, 'store'])->name('store');
+        
+        // Image Library (must come BEFORE wildcard routes)
+        Route::get('/images', [\App\Http\Controllers\ImageLibraryController::class, 'index'])->name('images.index');
+        Route::post('/images', [\App\Http\Controllers\ImageLibraryController::class, 'store'])->name('images.store');
+        Route::delete('/images', [\App\Http\Controllers\ImageLibraryController::class, 'destroy'])->name('images.destroy');
+        Route::get('/images/list', [\App\Http\Controllers\ImageLibraryController::class, 'list'])->name('images.list');
+        
+        // Wildcard routes (must come AFTER specific routes)
         Route::get('/{chatbotResponse}/edit', [\App\Http\Controllers\ChatbotAdminController::class, 'edit'])->name('edit');
         Route::put('/{chatbotResponse}', [\App\Http\Controllers\ChatbotAdminController::class, 'update'])->name('update');
         Route::delete('/{chatbotResponse}', [\App\Http\Controllers\ChatbotAdminController::class, 'destroy'])->name('destroy');
         Route::post('/preview', [\App\Http\Controllers\ChatbotAdminController::class, 'preview'])->name('preview');
         Route::post('/reorder', [\App\Http\Controllers\ChatbotAdminController::class, 'reorder'])->name('reorder');
-        
-        // Image Library
-        Route::get('/images', [\App\Http\Controllers\ImageLibraryController::class, 'index'])->name('images.index');
-        Route::post('/images', [\App\Http\Controllers\ImageLibraryController::class, 'store'])->name('images.store');
-        Route::delete('/images', [\App\Http\Controllers\ImageLibraryController::class, 'destroy'])->name('images.destroy');
-        Route::get('/images/list', [\App\Http\Controllers\ImageLibraryController::class, 'list'])->name('images.list');
     });
 });
 
