@@ -588,6 +588,11 @@
                         </div>
                     @endif
                 </div>
+                @if(auth()->user()->is_admin)
+                    <button class="delete-message-btn" onclick="deleteMessage({{ $message->id }})" title="Delete Message (Admin Only)" style="background: none; border: none; cursor: pointer; color: #ef4444; font-size: 16px; padding: 4px; margin-left: 4px;">
+                        🗑️
+                    </button>
+                @endif
                 <div class="message-timestamp">
                     {{ $message->thetime->format('g:i A') }}
                 </div>
@@ -1233,6 +1238,50 @@
                 return div.innerHTML;
             }
         };
+
+        // Delete message function (Admin only)
+        async function deleteMessage(messageId) {
+            if (!confirm('Are you sure you want to delete this message? This action will hide the message from all views.')) {
+                return;
+            }
+
+            try {
+                const response = await fetch(`/messages/${messageId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
+                        'Accept': 'application/json',
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Remove message from DOM with animation
+                    const messageElement = document.querySelector(`[data-message-id="${messageId}"]`);
+                    if (messageElement) {
+                        messageElement.style.transition = 'opacity 0.3s';
+                        messageElement.style.opacity = '0';
+                        setTimeout(() => {
+                            messageElement.remove();
+                            
+                            // Check if this was the last message in the conversation
+                            const remainingMessages = document.querySelectorAll('.message');
+                            if (remainingMessages.length === 0) {
+                                // Redirect to conversations list if no messages left
+                                window.location.href = '/conversations';
+                            }
+                        }, 300);
+                    }
+                } else {
+                    alert('Failed to delete message: ' + (result.error || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error deleting message:', error);
+                alert('Failed to delete message. Please try again.');
+            }
+        }
 
         // Initialize notification system
         if (document.readyState === 'loading') {

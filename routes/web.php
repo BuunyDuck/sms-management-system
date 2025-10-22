@@ -61,6 +61,7 @@ Route::middleware('auth')->group(function () {
     Route::post('/conversation/{phoneNumber}/send', [ConversationController::class, 'send'])->name('conversations.send');
     Route::post('/conversation/{phoneNumber}/toggle-support', [ConversationController::class, 'toggleSupport'])->name('conversations.toggle-support');
     Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
+    Route::delete('/messages/{id}', [ConversationController::class, 'deleteMessage'])->name('messages.delete');
     
     // SMS Test Page (protected)
     Route::get('/send', function () {

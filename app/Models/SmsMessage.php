@@ -67,6 +67,7 @@ class SmsMessage extends Model
         'ticketid',
         'replies_to_support',
         'is_bot_interaction',
+        'archived',
     ];
 
     /**
@@ -206,6 +207,25 @@ class SmsMessage extends Model
     public function scopeOldest($query)
     {
         return $query->orderBy('thetime', 'asc');
+    }
+
+    /**
+     * Scope: Exclude archived messages (default view)
+     */
+    public function scopeNotArchived($query)
+    {
+        return $query->where(function ($q) {
+            $q->where('archived', false)
+              ->orWhereNull('archived');
+        });
+    }
+
+    /**
+     * Scope: Only archived messages
+     */
+    public function scopeOnlyArchived($query)
+    {
+        return $query->where('archived', true);
     }
 
     /**

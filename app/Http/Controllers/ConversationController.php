@@ -34,7 +34,8 @@ class ConversationController extends Controller
                   ->orWhereIn('TO', $mtskyNumbers);
             })
             ->whereNotNull('FROM')
-            ->whereNotNull('TO');
+            ->whereNotNull('TO')
+            ->notArchived(); // Exclude archived messages
         
         // Apply agent filter
         if ($filterAgent === 'my') {
@@ -143,6 +144,9 @@ class ConversationController extends Controller
         // Build query for messages
         $query = SmsMessage::forNumber($phoneNumber);
         
+        // Always exclude archived messages
+        $query->notArchived();
+        
         // Check if user wants to see bot interactions (default: hide)
         $showBotInteractions = $request->input('show_bot', false);
         
@@ -166,11 +170,11 @@ class ConversationController extends Controller
         $formattedNumber = $this->formatPhoneNumber($phoneNumber);
         $messageCount = $messages->count();
         
-        // Get total message count (all time)
-        $totalMessageCount = SmsMessage::forNumber($phoneNumber)->count();
+        // Get total message count (all time, excluding archived)
+        $totalMessageCount = SmsMessage::forNumber($phoneNumber)->notArchived()->count();
         
-        // Count bot interactions for this conversation
-        $botInteractionCount = SmsMessage::forNumber($phoneNumber)->onlyBotInteractions()->count();
+        // Count bot interactions for this conversation (excluding archived)
+        $botInteractionCount = SmsMessage::forNumber($phoneNumber)->notArchived()->onlyBotInteractions()->count();
 
         // If no messages exist at all, redirect to compose with this number
         if ($totalMessageCount === 0) {
@@ -698,6 +702,50 @@ class ConversationController extends Controller
         return back()
             ->withInput()
             ->with('error', '❌ Failed to send: ' . ($result['error'] ?? 'Unknown error'));
+    }
+
+    /**
+     * Delete (archive) a specific message - Admin only
+     */
+    public function deleteMessage(Request $request, int $id)
+    {
+        // Check if user is admin
+        if (!auth()->user()->is_admin) {
+            return response()->json([
+                'success' => false,
+                'error' => 'Unauthorized. Admin access required.',
+            ], 403);
+        }
+
+        try {
+            $message = SmsMessage::findOrFail($id);
+            
+            // Archive the message (soft delete)
+            $message->archived = true;
+            $message->save();
+
+            Log::info('📦 Message archived by admin', [
+                'message_id' => $id,
+                'admin_user' => auth()->user()->name,
+                'from' => $message->FROM,
+                'to' => $message->TO,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Message deleted successfully',
+            ]);
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to delete message', [
+                'message_id' => $id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'error' => 'Failed to delete message',
+            ], 500);
+        }
     }
 }
 
