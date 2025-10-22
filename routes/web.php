@@ -106,8 +106,51 @@ Route::get('/api/quick-responses', function () {
         $html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">';
         
         foreach ($responses as $response) {
-            // Prepare the message (strip any existing media tags since we'll handle them separately)
-            $message = preg_replace('/<media>.*?<\/media>/s', '', $response->message);
+            // Get the message content
+            $message = $response->message;
+            
+            // Process dynamic includes if URL is set
+            if (!empty($response->include_url) && str_contains($message, '{CHATBOT_INCLUDE}')) {
+                try {
+                    \Log::info('🔗 Fetching dynamic include for Quick Response', [
+                        'menu_number' => $response->menu_number,
+                        'url' => $response->include_url
+                    ]);
+                    
+                    $context = stream_context_create([
+                        'http' => [
+                            'timeout' => 10,
+                            'method' => 'GET',
+                            'header' => 'User-Agent: MontanaSky-SMS-Chatbot/1.0',
+                        ],
+                    ]);
+                    
+                    $content = @file_get_contents($response->include_url, false, $context);
+                    
+                    if ($content !== false) {
+                        $message = str_replace('{CHATBOT_INCLUDE}', trim($content), $message);
+                        \Log::info('✅ Dynamic include processed for Quick Response', [
+                            'menu_number' => $response->menu_number,
+                            'content_length' => strlen($content)
+                        ]);
+                    } else {
+                        $message = str_replace('{CHATBOT_INCLUDE}', '[Content unavailable]', $message);
+                        \Log::warning('⚠️ Failed to fetch include URL for Quick Response', [
+                            'menu_number' => $response->menu_number,
+                            'url' => $response->include_url
+                        ]);
+                    }
+                } catch (\Exception $e) {
+                    $message = str_replace('{CHATBOT_INCLUDE}', '[Content unavailable]', $message);
+                    \Log::error('❌ Exception fetching include for Quick Response', [
+                        'menu_number' => $response->menu_number,
+                        'error' => $e->getMessage()
+                    ]);
+                }
+            }
+            
+            // Strip any existing media tags since we'll handle them separately
+            $message = preg_replace('/<media>.*?<\/media>/s', '', $message);
             $message = trim($message);
             
             // If there's an image, add media tag
@@ -122,10 +165,17 @@ Route::get('/api/quick-responses', function () {
             // Create button with data attributes
             $html .= '<button type="button" class="quick-response-btn" ';
             $html .= 'data-message="' . $escapedMessage . '" ';
+            
+            // Add visual indicator if dynamic content is included
+            $includeIndicator = (!empty($response->include_url)) ? '🔗 ' : '';
+            
             $html .= 'style="padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;">';
-            $html .= '<strong>' . $response->menu_number . '. ' . $escapedTitle . '</strong>';
+            $html .= '<strong>' . $includeIndicator . $response->menu_number . '. ' . $escapedTitle . '</strong>';
             if ($response->image_url) {
                 $html .= '<div style="font-size: 11px; margin-top: 4px; opacity: 0.9;">📸 Includes image</div>';
+            }
+            if (!empty($response->include_url)) {
+                $html .= '<div style="font-size: 11px; margin-top: 4px; opacity: 0.9;">🔗 Dynamic content</div>';
             }
             $html .= '</button>';
         }
