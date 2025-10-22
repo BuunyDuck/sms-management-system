@@ -10,16 +10,13 @@ use Illuminate\Support\Facades\Storage;
 class ChatbotAdminController extends Controller
 {
     /**
-     * Ensure user is admin
+     * Check if user is admin (called in each method)
      */
-    public function __construct()
+    protected function checkAdmin(): void
     {
-        $this->middleware(function ($request, $next) {
-            if (!auth()->user()->is_admin) {
-                abort(403, 'Unauthorized. Admin access required.');
-            }
-            return $next($request);
-        });
+        if (!auth()->check() || !auth()->user()->is_admin) {
+            abort(403, 'Unauthorized. Admin access required.');
+        }
     }
 
     /**
@@ -27,6 +24,8 @@ class ChatbotAdminController extends Controller
      */
     public function index()
     {
+        $this->checkAdmin();
+        
         $responses = ChatbotResponse::ordered()->get();
         
         return view('admin.chatbot.index', compact('responses'));
@@ -37,6 +36,8 @@ class ChatbotAdminController extends Controller
      */
     public function create()
     {
+        $this->checkAdmin();
+        
         // Get available menu numbers (1-20)
         $usedNumbers = ChatbotResponse::pluck('menu_number')->toArray();
         $availableNumbers = array_diff(range(1, 20), $usedNumbers);
@@ -49,6 +50,8 @@ class ChatbotAdminController extends Controller
      */
     public function store(Request $request)
     {
+        $this->checkAdmin();
+        
         $validated = $request->validate([
             'menu_number' => 'required|integer|between:1,20|unique:chatbot_responses,menu_number',
             'title' => 'required|string|max:100',
@@ -84,6 +87,8 @@ class ChatbotAdminController extends Controller
      */
     public function edit(ChatbotResponse $chatbotResponse)
     {
+        $this->checkAdmin();
+        
         // Get available menu numbers (including current)
         $usedNumbers = ChatbotResponse::where('id', '!=', $chatbotResponse->id)
             ->pluck('menu_number')
@@ -98,6 +103,8 @@ class ChatbotAdminController extends Controller
      */
     public function update(Request $request, ChatbotResponse $chatbotResponse)
     {
+        $this->checkAdmin();
+        
         $validated = $request->validate([
             'menu_number' => 'required|integer|between:1,20|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
             'title' => 'required|string|max:100',
@@ -143,6 +150,8 @@ class ChatbotAdminController extends Controller
      */
     public function destroy(ChatbotResponse $chatbotResponse)
     {
+        $this->checkAdmin();
+        
         $menuNumber = $chatbotResponse->menu_number;
         $title = $chatbotResponse->title;
 
@@ -168,6 +177,8 @@ class ChatbotAdminController extends Controller
      */
     public function preview(Request $request)
     {
+        $this->checkAdmin();
+        
         $message = $request->input('message', '');
         $hasImage = $request->boolean('has_image');
 
@@ -186,6 +197,8 @@ class ChatbotAdminController extends Controller
      */
     public function reorder(Request $request)
     {
+        $this->checkAdmin();
+        
         $order = $request->input('order', []);
 
         foreach ($order as $index => $id) {
