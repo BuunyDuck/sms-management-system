@@ -658,31 +658,21 @@
     </form>
 
     <script>
-        // Load quick response templates via our proxy (avoids CORS)
+        // Load Quick Responses from database (chatbot_responses table)
         fetch('{{ route('quick-responses') }}')
             .then(response => response.text())
             .then(html => {
                 document.getElementById('quick-response-content').innerHTML = html;
                 
-                // Fix button clicks to work with our textarea and handle <media> tags
-                document.querySelectorAll('#ai-message-include-btns div[onclick]').forEach(btn => {
-                    // Extract the ID from the onclick: $('#ID').data('content')
-                    const onclickAttr = btn.getAttribute('onclick');
-                    const contentIdMatch = onclickAttr.match(/\$\('#(\w+)'\)\.data\('content'\)/);
-                    
-                    if (!contentIdMatch) return; // Skip if we can't parse it
-                    
-                    const contentId = contentIdMatch[1];
-                    
-                    // Replace the onclick with our custom handler
+                // Attach click handlers to new database-driven buttons
+                document.querySelectorAll('.quick-response-btn').forEach(btn => {
                     btn.onclick = function(e) {
                         e.preventDefault();
                         
-                        // Get content from the hidden div
-                        const hiddenDiv = document.getElementById(contentId);
-                        if (hiddenDiv) {
-                            let content = hiddenDiv.getAttribute('data-content');
-                            
+                        // Get message from data attribute
+                        let content = btn.getAttribute('data-message');
+                        
+                        if (content) {
                             // Check for <media> tag
                             const mediaMatch = content.match(/<media>(.*?)<\/media>/);
                             
@@ -719,6 +709,9 @@
                                     sendButton.disabled = false;
                                 }
                             }
+                            
+                            // Hide quick responses
+                            document.getElementById('quick-responses').style.display = 'none';
                         }
                         return false;
                     };

@@ -90,14 +90,47 @@ Route::middleware('auth')->group(function () {
     });
 });
 
-// Proxy for quick response templates (to avoid CORS) - accessible without auth
+// Quick Responses API - Load from database (chatbot_responses table)
 Route::get('/api/quick-responses', function () {
     try {
-        $url = 'https://www.montanasky.net/MyAccount/TicketTracker/ajax/AI-Messages-Include.tpl?prepared_sms_text_area_id=message-input&is_include_media_tag=T';
-        $response = file_get_contents($url);
-        return response($response)->header('Content-Type', 'text/html');
+        // Get all active chatbot responses, ordered
+        $responses = \App\Models\ChatbotResponse::active()->ordered()->get();
+        
+        // Build HTML in the format expected by the UI
+        $html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">';
+        
+        foreach ($responses as $response) {
+            // Prepare the message (strip any existing media tags since we'll handle them separately)
+            $message = preg_replace('/<media>.*?<\/media>/s', '', $response->message);
+            $message = trim($message);
+            
+            // If there's an image, add media tag
+            if ($response->image_url) {
+                $message .= "\n\n<media>{$response->image_url}</media>";
+            }
+            
+            // Escape for HTML attributes
+            $escapedMessage = htmlspecialchars($message, ENT_QUOTES);
+            $escapedTitle = htmlspecialchars($response->title, ENT_QUOTES);
+            
+            // Create button with data attributes
+            $html .= '<button type="button" class="quick-response-btn" ';
+            $html .= 'data-message="' . $escapedMessage . '" ';
+            $html .= 'style="padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;">';
+            $html .= '<strong>' . $response->menu_number . '. ' . $escapedTitle . '</strong>';
+            if ($response->image_url) {
+                $html .= '<div style="font-size: 11px; margin-top: 4px; opacity: 0.9;">📸 Includes image</div>';
+            }
+            $html .= '</button>';
+        }
+        
+        $html .= '</div>';
+        
+        return response($html)->header('Content-Type', 'text/html');
     } catch (\Exception $e) {
-        return response('Failed to load quick responses', 500);
+        \Log::error('Quick Responses API error', ['error' => $e->getMessage()]);
+        return response('<div style="padding: 20px; color: #ef4444;">Failed to load quick responses. Please try again.</div>', 500)
+            ->header('Content-Type', 'text/html');
     }
 })->name('quick-responses');
 
