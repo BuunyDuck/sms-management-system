@@ -295,6 +295,12 @@ class ConversationController extends Controller
                 $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
                 $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
 
+                // End any active chatbot session (agent takes priority over bot)
+                $normalizedPhone = preg_replace('/[^0-9]/', '', $phoneNumber); // Remove +1 for bot table lookup
+                $normalizedPhone = substr($normalizedPhone, -10); // Last 10 digits
+                \App\Models\BotSession::where('phone', $normalizedPhone)->delete();
+                \Log::info('🤖 Ended chatbot session (agent sending message)', ['phone' => $normalizedPhone]);
+
                 // Get "Send to Support" preference
                 $sendToSupport = \DB::table('conversation_preferences')
                     ->where('phone_number', $phoneNumber)
@@ -641,6 +647,12 @@ class ConversationController extends Controller
                 
                 $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
                 $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
+
+                // End any active chatbot session (agent takes priority over bot)
+                $normalizedPhone = preg_replace('/[^0-9]/', '', $phoneNumber); // Remove +1 for bot table lookup
+                $normalizedPhone = substr($normalizedPhone, -10); // Last 10 digits
+                \App\Models\BotSession::where('phone', $normalizedPhone)->delete();
+                \Log::info('🤖 Ended chatbot session (agent sending message from compose)', ['phone' => $normalizedPhone]);
 
                 // Handle "Send to Support" preference
                 $sendToSupport = $validated['send_to_support'] ?? false;
