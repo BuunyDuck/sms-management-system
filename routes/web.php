@@ -128,7 +128,12 @@ Route::get('/api/quick-responses', function () {
                     $content = @file_get_contents($response->include_url, false, $context);
                     
                     if ($content !== false) {
-                        $message = str_replace('{CHATBOT_INCLUDE}', trim($content), $message);
+                        // Strip HTML tags and decode entities (show plain text like browser)
+                        $content = strip_tags($content);
+                        $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+                        $content = trim($content);
+                        
+                        $message = str_replace('{CHATBOT_INCLUDE}', $content, $message);
                         \Log::info('✅ Dynamic include processed for Quick Response', [
                             'menu_number' => $response->menu_number,
                             'content_length' => strlen($content)

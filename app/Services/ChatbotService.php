@@ -293,7 +293,9 @@ class ChatbotService
                 );
             }
             
-            // Trim and clean content
+            // Strip HTML tags and decode entities (show plain text like browser)
+            $content = strip_tags($content);
+            $content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
             $content = trim($content);
             
             // Replace placeholder
