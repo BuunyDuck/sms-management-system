@@ -248,8 +248,8 @@ class ChatbotService
             return $this->loadTemplateFromFile($menuNumber);
         }
 
-        // Return full message with media tag if image exists
-        return $response->full_message;
+        // Return full message with footer and media tag (for chatbot)
+        return $response->full_message_with_footer;
     }
 
     /**

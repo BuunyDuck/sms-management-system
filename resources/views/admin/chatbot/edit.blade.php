@@ -55,8 +55,22 @@
                             @error('message')
                                 <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
                             @enderror
-                            <div class="mt-2 p-3 bg-blue-50 rounded text-sm text-blue-800">
-                                <strong>💡 Tip:</strong> End your message with "Send MENU or EXIT" to guide customers
+                        </div>
+
+                        <!-- Footer -->
+                        <div class="mb-6">
+                            <label for="footer" class="block text-sm font-medium text-gray-700 mb-2">
+                                Footer Text
+                            </label>
+                            <textarea name="footer" id="footer" rows="2" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500" placeholder="Send MENU to continue or EXIT to quit.">{{ old('footer', $chatbotResponse->footer) }}</textarea>
+                            @error('footer')
+                                <p class="mt-1 text-sm text-red-600">{{ $message }}</p>
+                            @enderror
+                            <p class="mt-1 text-xs text-gray-500">
+                                This footer is <strong>only added when chatbot sends</strong> the message. Quick Responses (agents) will not include this footer.
+                            </p>
+                            <div class="mt-2 p-3 bg-amber-50 rounded text-sm text-amber-800">
+                                <strong>⚠️ Note:</strong> Edit this to add navigation instructions like "Send MENU to continue or EXIT to quit."
                             </div>
                         </div>
 

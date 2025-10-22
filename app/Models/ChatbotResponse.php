@@ -11,6 +11,7 @@ class ChatbotResponse extends Model
         'menu_number',
         'title',
         'message',
+        'footer',
         'template_file',
         'image_path',
         'active',
@@ -40,12 +41,33 @@ class ChatbotResponse extends Model
     }
 
     /**
-     * Get the full message with media tag if image exists
+     * Get the full message with media tag if image exists (FOR QUICK RESPONSES - NO FOOTER)
      */
     public function getFullMessageAttribute(): string
     {
         $message = $this->message;
         
+        if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
+            $imageUrl = Storage::disk('public')->url($this->image_path);
+            $message .= "\n\n<media>{$imageUrl}</media>";
+        }
+        
+        return $message;
+    }
+
+    /**
+     * Get the full message with footer and media tag (FOR CHATBOT)
+     */
+    public function getFullMessageWithFooterAttribute(): string
+    {
+        $message = $this->message;
+        
+        // Add footer if present
+        if (!empty($this->footer)) {
+            $message .= "\n\n" . $this->footer;
+        }
+        
+        // Add media tag if image exists
         if ($this->image_path && Storage::disk('public')->exists($this->image_path)) {
             $imageUrl = Storage::disk('public')->url($this->image_path);
             $message .= "\n\n<media>{$imageUrl}</media>";

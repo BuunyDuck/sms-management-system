@@ -56,6 +56,7 @@ class ChatbotAdminController extends Controller
             'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number',
             'title' => 'required|string|max:100',
             'message' => 'required|string',
+            'footer' => 'nullable|string|max:500',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
             'active' => 'boolean',
         ]);
@@ -109,6 +110,7 @@ class ChatbotAdminController extends Controller
             'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
             'title' => 'required|string|max:100',
             'message' => 'required|string',
+            'footer' => 'nullable|string|max:500',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
             'remove_image' => 'boolean',
             'active' => 'boolean',
