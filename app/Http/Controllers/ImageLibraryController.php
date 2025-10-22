@@ -93,16 +93,36 @@ class ImageLibraryController extends Controller
         $this->checkAdmin();
         
         $filename = $request->input('filename');
+        
+        Log::info('🗑️ Delete request received', [
+            'filename' => $filename,
+            'user' => auth()->user()->name,
+            'all_input' => $request->all(),
+        ]);
+        
+        if (!$filename) {
+            Log::error('❌ No filename provided in delete request');
+            return back()->with('error', '❌ No filename provided');
+        }
+        
         $path = 'chatbot-images/' . $filename;
+        
+        Log::info('🔍 Checking if image exists', ['path' => $path]);
         
         // Check if image is in use
         $usedBy = ChatbotResponse::where('image_path', $path)->get();
         
         if ($usedBy->isNotEmpty()) {
+            Log::warning('⚠️ Cannot delete - image in use', [
+                'path' => $path,
+                'used_by_count' => $usedBy->count(),
+            ]);
             return back()->with('error', '⚠️ Cannot delete image - it is currently used by ' . $usedBy->count() . ' response(s)');
         }
         
         if (Storage::disk('public')->exists($path)) {
+            Log::info('✅ Image found, deleting...', ['path' => $path]);
+            
             Storage::disk('public')->delete($path);
             
             Log::info('🗑️ Image deleted from library', [
@@ -113,6 +133,7 @@ class ImageLibraryController extends Controller
             return back()->with('success', "✅ Image deleted: {$filename}");
         }
         
+        Log::error('❌ Image not found in storage', ['path' => $path]);
         return back()->with('error', '❌ Image not found');
     }
 
