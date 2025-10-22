@@ -121,7 +121,7 @@
                         <div class="mt-6 p-4 bg-blue-50 rounded-lg">
                             <h3 class="font-semibold text-sm text-blue-900 mb-2">💡 Pro Tips:</h3>
                             <ul class="text-sm text-blue-800 space-y-1">
-                                <li>• Menu numbers 1-20 are available for chatbot responses</li>
+                                <li>• Menu numbers 1-99 are available for chatbot responses</li>
                                 <li>• Images are automatically included with the <code class="bg-blue-100 px-1 rounded">&lt;media&gt;</code> tag</li>
                                 <li>• Set responses to "Inactive" to temporarily disable without deleting</li>
                                 <li>• Customers can exit the chatbot by texting <strong>EXIT</strong></li>

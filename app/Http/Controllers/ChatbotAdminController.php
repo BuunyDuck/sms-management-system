@@ -38,9 +38,9 @@ class ChatbotAdminController extends Controller
     {
         $this->checkAdmin();
         
-        // Get available menu numbers (1-20)
+        // Get available menu numbers (1-99)
         $usedNumbers = ChatbotResponse::pluck('menu_number')->toArray();
-        $availableNumbers = array_diff(range(1, 20), $usedNumbers);
+        $availableNumbers = array_diff(range(1, 99), $usedNumbers);
         
         return view('admin.chatbot.create', compact('availableNumbers'));
     }
@@ -53,7 +53,7 @@ class ChatbotAdminController extends Controller
         $this->checkAdmin();
         
         $validated = $request->validate([
-            'menu_number' => 'required|integer|between:1,20|unique:chatbot_responses,menu_number',
+            'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number',
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120', // 5MB max
@@ -89,11 +89,11 @@ class ChatbotAdminController extends Controller
     {
         $this->checkAdmin();
         
-        // Get available menu numbers (including current)
+        // Get available menu numbers (including current) 1-99
         $usedNumbers = ChatbotResponse::where('id', '!=', $chatbotResponse->id)
             ->pluck('menu_number')
             ->toArray();
-        $availableNumbers = array_diff(range(1, 20), $usedNumbers);
+        $availableNumbers = array_diff(range(1, 99), $usedNumbers);
         
         return view('admin.chatbot.edit', compact('chatbotResponse', 'availableNumbers'));
     }
@@ -106,7 +106,7 @@ class ChatbotAdminController extends Controller
         $this->checkAdmin();
         
         $validated = $request->validate([
-            'menu_number' => 'required|integer|between:1,20|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
+            'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:5120',
