@@ -38,9 +38,9 @@ class ChatbotAdminController extends Controller
     {
         $this->checkAdmin();
         
-        // Get available menu numbers (1-99)
+        // Get available menu numbers (1-199)
         $usedNumbers = ChatbotResponse::pluck('menu_number')->toArray();
-        $availableNumbers = array_diff(range(1, 99), $usedNumbers);
+        $availableNumbers = array_diff(range(1, 199), $usedNumbers);
         
         return view('admin.chatbot.create', compact('availableNumbers'));
     }
@@ -53,7 +53,7 @@ class ChatbotAdminController extends Controller
         $this->checkAdmin();
         
         $validated = $request->validate([
-            'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number',
+            'menu_number' => 'required|integer|between:1,199|unique:chatbot_responses,menu_number',
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',
@@ -85,11 +85,11 @@ class ChatbotAdminController extends Controller
     {
         $this->checkAdmin();
         
-        // Get available menu numbers (including current) 1-99
+        // Get available menu numbers (including current) 1-199
         $usedNumbers = ChatbotResponse::where('id', '!=', $chatbotResponse->id)
             ->pluck('menu_number')
             ->toArray();
-        $availableNumbers = array_diff(range(1, 99), $usedNumbers);
+        $availableNumbers = array_diff(range(1, 199), $usedNumbers);
         
         return view('admin.chatbot.edit', compact('chatbotResponse', 'availableNumbers'));
     }
@@ -102,7 +102,7 @@ class ChatbotAdminController extends Controller
         $this->checkAdmin();
         
         $validated = $request->validate([
-            'menu_number' => 'required|integer|between:1,99|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
+            'menu_number' => 'required|integer|between:1,199|unique:chatbot_responses,menu_number,' . $chatbotResponse->id,
             'title' => 'required|string|max:100',
             'message' => 'required|string',
             'footer' => 'nullable|string|max:500',

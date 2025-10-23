@@ -602,11 +602,22 @@
 
     <div class="compose-area">
         <!-- Quick Response Templates -->
-        <div class="quick-responses" id="quick-responses" style="display: none; padding: 10px; background: #f8f8f8; border-bottom: 1px solid #d1d1d6; max-height: 200px; overflow-y: auto;">
+        <div class="quick-responses" id="quick-responses" style="display: none; padding: 10px; background: #f8f8f8; border-bottom: 1px solid #d1d1d6; max-height: 300px; overflow-y: auto;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
                 <strong style="font-size: 13px; color: #333;">📋 Quick Responses</strong>
                 <a href="#" onclick="document.getElementById('quick-responses').style.display='none'; return false;" style="color: #007aff; text-decoration: none; font-size: 12px;">Hide</a>
             </div>
+            
+            <!-- Filter Toggle -->
+            <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                <button type="button" id="qr-filter-customer" class="qr-filter-btn" onclick="loadQuickResponses('customer')" style="flex: 1; padding: 6px 12px; background: #007aff; color: white; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+                    🔵 Customer (1-99)
+                </button>
+                <button type="button" id="qr-filter-agent" class="qr-filter-btn" onclick="loadQuickResponses('agent')" style="flex: 1; padding: 6px 12px; background: #e5e5ea; color: #666; border: none; border-radius: 6px; font-size: 11px; font-weight: 600; cursor: pointer;">
+                    🟢 Agent (100-199)
+                </button>
+            </div>
+            
             <div id="quick-response-content" style="font-size: 12px;">
                 Loading...
             </div>
@@ -658,25 +669,46 @@
     </form>
 
     <script>
+        // Track current filter
+        let currentQRFilter = 'customer';
+        
         // Load Quick Responses from database (chatbot_responses table)
-        fetch('{{ route('quick-responses') }}')
-            .then(response => response.text())
-            .then(html => {
-                document.getElementById('quick-response-content').innerHTML = html;
-                
-                // Attach click handlers to new database-driven buttons
-                document.querySelectorAll('.quick-response-btn').forEach(btn => {
-                    btn.onclick = function(e) {
-                        e.preventDefault();
-                        
-                        // Get message from data attribute
-                        let content = btn.getAttribute('data-message');
-                        
-                        if (content) {
-                            // Check for <media> tag
-                            const mediaMatch = content.match(/<media>(.*?)<\/media>/);
+        function loadQuickResponses(filter = 'customer') {
+            currentQRFilter = filter;
+            
+            // Update button states
+            document.querySelectorAll('.qr-filter-btn').forEach(btn => {
+                btn.style.background = '#e5e5ea';
+                btn.style.color = '#666';
+            });
+            
+            const activeBtn = document.getElementById('qr-filter-' + filter);
+            if (filter === 'customer') {
+                activeBtn.style.background = '#007aff';
+            } else {
+                activeBtn.style.background = '#10b981';
+            }
+            activeBtn.style.color = 'white';
+            
+            // Fetch responses with filter
+            fetch('{{ route('quick-responses') }}?filter=' + filter)
+                .then(response => response.text())
+                .then(html => {
+                    document.getElementById('quick-response-content').innerHTML = html;
+                    
+                    // Attach click handlers to new database-driven buttons
+                    document.querySelectorAll('.quick-response-btn').forEach(btn => {
+                        btn.onclick = function(e) {
+                            e.preventDefault();
                             
-                            if (mediaMatch) {
+                            // Get message from data attribute
+                            let content = btn.getAttribute('data-message');
+                            
+                            if (content) {
+                                // Check for <media> tag
+                                const mediaMatch = content.match(/<media>(.*?)<\/media>/);
+                                
+                                if (mediaMatch) {
                                 // Extract media URL
                                 const mediaUrl = mediaMatch[1];
                                 
@@ -715,12 +747,16 @@
                         }
                         return false;
                     };
+                    });
+                })
+                .catch(error => {
+                    document.getElementById('quick-response-content').innerHTML = '<span style="color: #999;">Failed to load quick responses</span>';
+                    console.error('Error loading quick responses:', error);
                 });
-            })
-            .catch(error => {
-                document.getElementById('quick-response-content').innerHTML = '<span style="color: #999;">Failed to load quick responses</span>';
-                console.error('Error loading quick responses:', error);
-            });
+        }
+        
+        // Load default filter on page load
+        loadQuickResponses('customer');
 
         // Auto-resize textarea
         const messageInput = document.getElementById('message-input');

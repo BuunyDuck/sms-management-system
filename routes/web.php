@@ -99,10 +99,25 @@ Route::middleware('auth')->group(function () {
 });
 
 // Quick Responses API - Load from database (chatbot_responses table)
-Route::get('/api/quick-responses', function () {
+Route::get('/api/quick-responses', function (\Illuminate\Http\Request $request) {
     try {
-        // Get all active chatbot responses, ordered
-        $responses = \App\Models\ChatbotResponse::active()->ordered()->get();
+        // Get filter parameter (customer, agent, or all)
+        $filter = $request->query('filter', 'all');
+        
+        // Build query for active responses
+        $query = \App\Models\ChatbotResponse::active()->ordered();
+        
+        // Apply range filter
+        if ($filter === 'customer') {
+            // Customer self-service (1-99)
+            $query->where('menu_number', '>=', 1)->where('menu_number', '<=', 99);
+        } elseif ($filter === 'agent') {
+            // Agent-only (100-199)
+            $query->where('menu_number', '>=', 100)->where('menu_number', '<=', 199);
+        }
+        // 'all' = no filter
+        
+        $responses = $query->get();
         
         // Build HTML in the format expected by the UI
         $html = '<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 10px;">';
@@ -176,7 +191,10 @@ Route::get('/api/quick-responses', function () {
             // Add visual indicator if dynamic content is included
             $includeIndicator = (!empty($response->include_url)) ? '🔗 ' : '';
             
-            $html .= 'style="padding: 12px; background: #007aff; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;">';
+            // Color code based on range: Blue (1-99) or Green (100-199)
+            $bgColor = ($response->menu_number >= 100) ? '#10b981' : '#007aff';
+            
+            $html .= 'style="padding: 12px; background: ' . $bgColor . '; color: white; border: none; border-radius: 8px; cursor: pointer; text-align: left; font-size: 13px; transition: all 0.2s;">';
             $html .= '<strong>' . $includeIndicator . $response->menu_number . '. ' . $escapedTitle . '</strong>';
             if ($response->image_url) {
                 $html .= '<div style="font-size: 11px; margin-top: 4px; opacity: 0.9;">📸 Includes image</div>';

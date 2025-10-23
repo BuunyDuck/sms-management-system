@@ -153,7 +153,16 @@ class ChatbotService
             return "BOT: Not valid entry. Please type MENU or type EXIT to resume normal texting.";
         }
 
-        $option = trim($input);
+        $option = (int) trim($input);
+        
+        // Reject agent-only menu items (100-199) from customer input
+        if ($option >= 100 && $option <= 199) {
+            Log::info('🔒 Customer attempted to access agent-only menu item', [
+                'phone' => $phone,
+                'option' => $option
+            ]);
+            return "BOT: Invalid option. Please type MENU to see available options or EXIT to resume normal texting.";
+        }
 
         // Append option to menu path
         $session->appendOption($option);
@@ -164,11 +173,17 @@ class ChatbotService
 
     /**
      * Get the main menu response (from database)
+     * Only shows customer-facing menu items (1-99)
+     * Agent-only items (100-199) are hidden from customers
      */
     protected function getMainMenuResponse(): string
     {
-        // Fetch all active responses from database
-        $responses = ChatbotResponse::active()->ordered()->get();
+        // Fetch all active responses from database (only 1-99 for customer menu)
+        $responses = ChatbotResponse::active()
+            ->where('menu_number', '>=', 1)
+            ->where('menu_number', '<=', 99)
+            ->ordered()
+            ->get();
         
         if ($responses->isEmpty()) {
             // Fallback if no responses in database
