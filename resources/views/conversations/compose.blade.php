@@ -113,7 +113,7 @@
             font-size: 14px;
             font-family: inherit;
             resize: none;
-            max-height: 100px;
+            max-height: 168px;
             min-height: 40px;
         }
         
@@ -352,7 +352,7 @@
                               name="body" 
                               class="compose-input" 
                               placeholder="iMessage"
-                              rows="1"
+                              rows="4"
                               maxlength="1600"
                               required></textarea>
                     
@@ -494,7 +494,7 @@
                                 // Populate message textarea
                                 messageInput.value = content;
                                 messageInput.style.height = 'auto';
-                                messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+                                messageInput.style.height = Math.min(messageInput.scrollHeight, 168) + 'px';
                                 
                                 // Update character count
                                 document.getElementById('char-count').textContent = content.length + ' / 1600';

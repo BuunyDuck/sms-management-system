@@ -275,7 +275,7 @@
             font-size: 14px;
             font-family: inherit;
             resize: none;
-            max-height: 100px;
+            max-height: 168px;
             min-height: 40px;
         }
 
@@ -641,7 +641,7 @@
                     name="body" 
                     class="compose-input" 
                     placeholder="iMessage" 
-                    rows="1"
+                    rows="4"
                     id="message-input"
                     required
                 ></textarea>
@@ -727,7 +727,7 @@
                             if (messageInput) {
                                 messageInput.value = content;
                                 messageInput.style.height = 'auto';
-                                messageInput.style.height = Math.min(messageInput.scrollHeight, 100) + 'px';
+                                messageInput.style.height = Math.min(messageInput.scrollHeight, 168) + 'px';
                                 
                                 // Update character count
                                 const charCount = document.getElementById('char-count');
@@ -762,7 +762,7 @@
         const messageInput = document.getElementById('message-input');
         messageInput.addEventListener('input', function() {
             this.style.height = 'auto';
-            this.style.height = Math.min(this.scrollHeight, 100) + 'px';
+            this.style.height = Math.min(this.scrollHeight, 168) + 'px';
             
             // Update character count
             const charCount = document.getElementById('char-count');
