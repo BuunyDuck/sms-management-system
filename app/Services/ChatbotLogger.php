@@ -103,18 +103,45 @@ class ChatbotLogger
      */
     public function endSession(string $phone, string $exitType = 'explicit'): void
     {
+        $normalizedPhone = $this->normalizePhone($phone);
+        
+        // Try to get the session ID if not already set
         if (!$this->sessionId) {
             $this->sessionId = $this->getCurrentSessionId($phone);
         }
 
+        // If we found a specific session, update it
         if ($this->sessionId) {
-            DB::table('chatbot_sessions_log')
+            $updated = DB::table('chatbot_sessions_log')
                 ->where('session_id', $this->sessionId)
                 ->update([
                     'session_end' => Carbon::now(),
                     'exit_type' => $exitType,
                     'completed_successfully' => ($exitType === 'explicit'),
                 ]);
+                
+            Log::debug('Chatbot session ended by session_id', [
+                'session_id' => $this->sessionId,
+                'phone' => $normalizedPhone,
+                'rows_updated' => $updated
+            ]);
+        } 
+        // Fallback: Update any recent active sessions for this phone
+        else {
+            $updated = DB::table('chatbot_sessions_log')
+                ->where('phone', $normalizedPhone)
+                ->where('exit_type', 'active')
+                ->where('session_start', '>=', Carbon::now()->subMinutes(30))
+                ->update([
+                    'session_end' => Carbon::now(),
+                    'exit_type' => $exitType,
+                    'completed_successfully' => ($exitType === 'explicit'),
+                ]);
+                
+            Log::debug('Chatbot session ended by phone fallback', [
+                'phone' => $normalizedPhone,
+                'rows_updated' => $updated
+            ]);
         }
 
         // Reset session
