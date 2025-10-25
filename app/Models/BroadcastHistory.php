@@ -11,6 +11,7 @@ class BroadcastHistory extends Model
     protected $fillable = [
         'user_id',
         'user_name',
+        'from_number',
         'sent_at',
         'quick_response_id',
         'quick_response_title',

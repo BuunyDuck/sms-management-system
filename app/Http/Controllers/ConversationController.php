@@ -788,9 +788,13 @@ class ConversationController extends Controller
         $validated = $request->validate([
             'phone_numbers' => 'required|string',
             'body' => 'required|string|max:1600',
+            'from_number' => 'nullable|string',
             'media_url' => 'nullable|url',
             'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,pdf|max:5120',
         ]);
+
+        // Get from number (use selected or default to main)
+        $fromNumber = $validated['from_number'] ?? config('services.twilio.from_number');
 
         // Parse phone numbers (comma-separated)
         $phoneNumbers = explode(',', $validated['phone_numbers']);
@@ -820,6 +824,7 @@ class ConversationController extends Controller
 
         // Prepare options
         $options = [
+            'from' => $fromNumber,  // Use selected from number
             'mediaUrl' => $mediaUrl,
         ];
 
@@ -890,7 +895,7 @@ class ConversationController extends Controller
                         \App\Models\BotSession::where('phone', $normalizedPhone)->delete();
 
                         SmsMessage::create([
-                            'FROM' => config('services.twilio.from_number'),
+                            'FROM' => $fromNumber,  // Use selected from number
                             'fromname' => auth()->user()->name . ' (Broadcast)',
                             'TO' => $phoneNumber,
                             'toname' => $toName,
@@ -956,6 +961,7 @@ class ConversationController extends Controller
         \App\Models\BroadcastHistory::create([
             'user_id' => auth()->id(),
             'user_name' => auth()->user()->name,
+            'from_number' => $fromNumber,  // Save selected from number
             'sent_at' => now(),
             'quick_response_id' => null, // TODO: Track if Quick Response was used
             'quick_response_title' => null,
@@ -973,6 +979,7 @@ class ConversationController extends Controller
             'failureCount' => $failureCount,
             'totalCost' => $totalCost,
             'messageBody' => $messageBody,
+            'fromNumber' => $fromNumber,  // Pass selected from number to view
         ]);
     }
 

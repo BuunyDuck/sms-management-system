@@ -251,6 +251,7 @@
                         <tr>
                             <th>Date & Time</th>
                             <th>Sent By</th>
+                            <th>From Number</th>
                             <th>Type</th>
                             <th>Message</th>
                             <th style="text-align: center;">Recipients</th>
@@ -271,6 +272,20 @@
                                 <!-- Sent By -->
                                 <td>
                                     <div style="font-weight: 600;">{{ $broadcast->user_name }}</div>
+                                </td>
+                                
+                                <!-- From Number -->
+                                <td>
+                                    <div style="font-size: 13px; color: #4a5568;">
+                                        {{ $broadcast->from_number ?? config('services.twilio.from_number') }}
+                                    </div>
+                                    <div style="font-size: 11px; color: #718096; margin-top: 2px;">
+                                        @php
+                                            $fromNumbers = config('services.twilio.from_numbers', []);
+                                            $label = $fromNumbers[$broadcast->from_number ?? ''] ?? $fromNumbers[config('services.twilio.from_number')] ?? 'Main';
+                                        @endphp
+                                        {{ $label }}
+                                    </div>
                                 </td>
                                 
                                 <!-- Type (Quick Response or Manual) -->

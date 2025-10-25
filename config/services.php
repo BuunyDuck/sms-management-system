@@ -53,6 +53,12 @@ return [
         'from_number' => env('TWILIO_FROM_NUMBER', '+14062152048'),
         'webhook_url' => env('TWILIO_WEBHOOK_URL', env('APP_URL') . '/webhook/twilio'),
         'validate_signature' => env('TWILIO_VALIDATE_SIGNATURE', true),
+        
+        // Available phone numbers for sending SMS
+        'from_numbers' => [
+            '+14062152048' => 'Main (Monitored)',
+            '+14066076333' => 'Unmonitored',
+        ],
     ],
 
     /*

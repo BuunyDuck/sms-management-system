@@ -200,6 +200,19 @@
                 </div>
             </div>
             
+            <!-- From Number Info -->
+            <div style="background: #f7fafc; padding: 12px 16px; border-radius: 8px; margin-top: 20px; text-align: center;">
+                <div style="font-size: 12px; color: #718096; margin-bottom: 4px;">Sent From:</div>
+                <div style="font-size: 14px; font-weight: 600; color: #2d3748;">{{ $fromNumber ?? config('services.twilio.from_number') }}</div>
+                <div style="font-size: 11px; color: #718096; margin-top: 2px;">
+                    @php
+                        $fromNumbers = config('services.twilio.from_numbers', []);
+                        $label = $fromNumbers[$fromNumber ?? ''] ?? $fromNumbers[config('services.twilio.from_number')] ?? 'Main';
+                    @endphp
+                    {{ $label }}
+                </div>
+            </div>
+            
             <!-- Results List -->
             <div class="results-list">
                 @foreach($results as $result)

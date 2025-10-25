@@ -323,6 +323,23 @@
             </div>
         @endif
         
+        <!-- From Number Selection -->
+        <div class="phone-input-container" style="border-bottom: none; padding-bottom: 0;">
+            <label for="from-number" style="display: block; font-size: 13px; font-weight: 600; color: #4a5568; margin-bottom: 8px;">
+                📤 From Number:
+            </label>
+            <select id="from-number" class="phone-input" style="min-height: auto; height: 44px; cursor: pointer; background-color: white;">
+                @foreach(config('services.twilio.from_numbers') as $number => $label)
+                    <option value="{{ $number }}" {{ $loop->first ? 'selected' : '' }}>
+                        {{ $number }} - {{ $label }}
+                    </option>
+                @endforeach
+            </select>
+            <div style="margin-top: 8px; font-size: 12px; color: #718096;">
+                💡 <strong>Main (Monitored)</strong> accepts replies | <strong>Unmonitored</strong> is broadcast-only
+            </div>
+        </div>
+        
         <!-- Phone Numbers Input (Multiple) -->
         <div class="phone-input-container">
             <textarea id="phone-numbers" 
@@ -372,6 +389,7 @@
             <form id="compose-form" method="POST" action="{{ route('conversations.broadcast.send') }}" enctype="multipart/form-data" class="compose-form">
                 @csrf
                 <input type="hidden" name="phone_numbers" id="phone-numbers-field">
+                <input type="hidden" name="from_number" id="from-number-field" value="{{ config('services.twilio.from_number') }}">
                 <input type="file" id="file-input" name="media_file" accept="image/*,video/*" style="display: none;">
                 
                 <div class="compose-input-wrapper">
@@ -484,6 +502,17 @@
             // Update send button
             updateSendButton();
         }
+        
+        // From number dropdown handling
+        const fromNumberSelect = document.getElementById('from-number');
+        const fromNumberField = document.getElementById('from-number-field');
+        
+        fromNumberSelect.addEventListener('change', function() {
+            fromNumberField.value = this.value;
+        });
+        
+        // Initialize from number field with selected value
+        fromNumberField.value = fromNumberSelect.value;
         
         // Phone numbers input handling
         const phoneNumbersInput = document.getElementById('phone-numbers');
