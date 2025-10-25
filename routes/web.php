@@ -63,6 +63,12 @@ Route::middleware('auth')->group(function () {
     Route::post('/conversations/archive', [ConversationController::class, 'archive'])->name('conversations.archive');
     Route::delete('/messages/{id}', [ConversationController::class, 'deleteMessage'])->name('messages.delete');
     
+    // Broadcast SMS (admin only)
+    Route::middleware('auth')->group(function () {
+        Route::get('/conversations/broadcast', [ConversationController::class, 'broadcast'])->name('conversations.broadcast');
+        Route::post('/conversations/broadcast/send', [ConversationController::class, 'broadcastSend'])->name('conversations.broadcast.send');
+    });
+    
     // SMS Test Page (protected)
     Route::get('/send', function () {
         return view('sms-test');

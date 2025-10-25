@@ -759,5 +759,207 @@ class ConversationController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Show broadcast SMS form (Admin only)
+     */
+    public function broadcast()
+    {
+        // Check if user is admin
+        if (!auth()->user()->is_admin) {
+            return redirect()->route('conversations.index')
+                ->with('error', '❌ Access denied. Admin privileges required.');
+        }
+
+        return view('conversations.broadcast');
+    }
+
+    /**
+     * Send broadcast SMS to multiple recipients (Admin only)
+     */
+    public function broadcastSend(Request $request)
+    {
+        // Check if user is admin
+        if (!auth()->user()->is_admin) {
+            return redirect()->route('conversations.index')
+                ->with('error', '❌ Access denied. Admin privileges required.');
+        }
+
+        $validated = $request->validate([
+            'phone_numbers' => 'required|string',
+            'body' => 'required|string|max:1600',
+            'media_url' => 'nullable|url',
+            'media_file' => 'nullable|file|mimes:jpg,jpeg,png,gif,mp4,pdf|max:5120',
+        ]);
+
+        // Parse phone numbers (comma-separated)
+        $phoneNumbers = explode(',', $validated['phone_numbers']);
+        $phoneNumbers = array_map('trim', $phoneNumbers);
+        $phoneNumbers = array_filter($phoneNumbers);
+        $phoneNumbers = array_unique($phoneNumbers);
+
+        // Extract <media> tag from body if present
+        $messageBody = $validated['body'];
+        $mediaUrl = $validated['media_url'] ?? null;
+        
+        if (preg_match('/<media>(.*?)<\/media>/s', $messageBody, $matches)) {
+            if (empty($mediaUrl)) {
+                $mediaUrl = trim($matches[1]);
+            }
+            $messageBody = preg_replace('/<media>.*?<\/media>/s', '', $messageBody);
+            $messageBody = trim($messageBody);
+        }
+
+        // Handle file upload
+        if ($request->hasFile('media_file')) {
+            $file = $request->file('media_file');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('media'), $filename);
+            $mediaUrl = url('/media/' . $filename);
+        }
+
+        // Prepare options
+        $options = [
+            'mediaUrl' => $mediaUrl,
+        ];
+
+        // Add status callback if not in local environment
+        $appUrl = config('app.url');
+        if (!str_contains($appUrl, 'localhost') && !str_contains($appUrl, '127.0.0.1')) {
+            $options['statusCallback'] = route('webhook.twilio.status');
+        }
+
+        // Send to each recipient and track results
+        $results = [];
+        $successCount = 0;
+        $failureCount = 0;
+
+        foreach ($phoneNumbers as $phoneNumber) {
+            try {
+                // Normalize phone number
+                $phoneNumber = preg_replace('/[^0-9+]/', '', $phoneNumber);
+                if (!str_starts_with($phoneNumber, '+')) {
+                    $phoneNumber = '+' . $phoneNumber;
+                }
+
+                // Send SMS
+                $result = $this->twilioService->sendSms(
+                    $phoneNumber,
+                    $messageBody,
+                    $options
+                );
+
+                if ($result['success']) {
+                    $successCount++;
+                    
+                    // Save to database
+                    try {
+                        $numMedia = $mediaUrl ? 1 : 0;
+                        $mediaUrlList = $mediaUrl ? $mediaUrl : '';
+                        $mediaTypeList = '';
+                        
+                        if ($mediaUrl) {
+                            $extension = strtolower(pathinfo(parse_url($mediaUrl, PHP_URL_PATH), PATHINFO_EXTENSION));
+                            $mediaTypeList = match($extension) {
+                                'jpg', 'jpeg' => 'image/jpeg',
+                                'png' => 'image/png',
+                                'gif' => 'image/gif',
+                                'mp4' => 'video/mp4',
+                                'pdf' => 'application/pdf',
+                                default => 'application/octet-stream',
+                            };
+                        }
+
+                        // Get customer name if available
+                        $customerInfo = \DB::connection('mysql')
+                            ->select("
+                                SELECT c.NAME as customer_name, c.SKU as customer_sku
+                                FROM cat_customer_to_phone AS p
+                                JOIN db_297_netcustomers AS c ON p.customer_sku = c.SKU
+                                WHERE p.phone = ?
+                                ORDER BY p.is_primary_record_for_cat_sms DESC
+                                LIMIT 1
+                            ", [ltrim($phoneNumber, '+1')]);
+                        
+                        $toName = !empty($customerInfo) ? $customerInfo[0]->customer_name : '';
+                        $custSku = !empty($customerInfo) ? $customerInfo[0]->customer_sku : null;
+
+                        // End any active chatbot session
+                        $normalizedPhone = preg_replace('/[^0-9]/', '', $phoneNumber);
+                        $normalizedPhone = substr($normalizedPhone, -10);
+                        \App\Models\BotSession::where('phone', $normalizedPhone)->delete();
+
+                        SmsMessage::create([
+                            'FROM' => config('services.twilio.from_number'),
+                            'fromname' => auth()->user()->name . ' (Broadcast)',
+                            'TO' => $phoneNumber,
+                            'toname' => $toName,
+                            'custsku' => $custSku,
+                            'BODY' => $messageBody,
+                            'MESSAGESID' => $result['message_sid'],
+                            'ACCOUNTSID' => config('services.twilio.account_sid'),
+                            'NUMMEDIA' => $numMedia,
+                            'MESSAGESTATUS' => $result['status'],
+                            'mediaurllist' => $mediaUrlList,
+                            'mediatypelist' => $mediaTypeList,
+                            'replies_to_support' => 0,
+                            'user_id' => auth()->id(),
+                        ]);
+                    } catch (\Exception $e) {
+                        Log::error('❌ Failed to save broadcast message to database', [
+                            'error' => $e->getMessage(),
+                            'phone' => $phoneNumber,
+                        ]);
+                    }
+
+                    $results[] = [
+                        'phone' => $this->formatPhoneNumber($phoneNumber),
+                        'success' => true,
+                        'status' => ucfirst($result['status']),
+                    ];
+                } else {
+                    $failureCount++;
+                    $results[] = [
+                        'phone' => $this->formatPhoneNumber($phoneNumber),
+                        'success' => false,
+                        'error' => $result['error'] ?? 'Unknown error',
+                    ];
+                }
+
+            } catch (\Exception $e) {
+                $failureCount++;
+                $results[] = [
+                    'phone' => $this->formatPhoneNumber($phoneNumber),
+                    'success' => false,
+                    'error' => $e->getMessage(),
+                ];
+                
+                Log::error('❌ Broadcast send failed', [
+                    'phone' => $phoneNumber,
+                    'error' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        // Calculate estimated cost ($0.01 per message)
+        $totalCost = $successCount * 0.01;
+
+        Log::info('✅ Broadcast completed', [
+            'admin' => auth()->user()->name,
+            'recipients' => count($phoneNumbers),
+            'success' => $successCount,
+            'failed' => $failureCount,
+            'cost' => $totalCost,
+        ]);
+
+        // Return results page
+        return view('conversations.broadcast-results', [
+            'results' => $results,
+            'successCount' => $successCount,
+            'failureCount' => $failureCount,
+            'totalCost' => $totalCost,
+            'messageBody' => $messageBody,
+        ]);
+    }
 }
 
