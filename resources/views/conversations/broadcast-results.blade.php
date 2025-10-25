@@ -229,6 +229,9 @@
                 <a href="{{ route('conversations.broadcast') }}" class="btn btn-primary">
                     📢 Send Another Broadcast
                 </a>
+                <a href="{{ route('conversations.broadcast.history') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                    📊 View History
+                </a>
                 <a href="{{ route('conversations.index') }}" class="btn btn-secondary">
                     💬 View Conversations
                 </a>

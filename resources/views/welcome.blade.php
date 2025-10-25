@@ -268,6 +268,7 @@
                     <a href="{{ route('conversations.compose') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📱 New Message</a>
                     @if(auth()->user()->is_admin)
                         <a href="{{ route('conversations.broadcast') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);">📢 Broadcast SMS</a>
+                        <a href="{{ route('conversations.broadcast.history') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">📊 Broadcast History</a>
                     @endif
                     <a href="{{ route('analytics.chatbot') }}" class="btn btn-primary" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">📊 Chatbot Analytics</a>
                     @if(auth()->user()->is_admin)

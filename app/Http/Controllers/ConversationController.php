@@ -952,6 +952,20 @@ class ConversationController extends Controller
             'cost' => $totalCost,
         ]);
 
+        // Save to broadcast history
+        \App\Models\BroadcastHistory::create([
+            'user_id' => auth()->id(),
+            'user_name' => auth()->user()->name,
+            'sent_at' => now(),
+            'quick_response_id' => null, // TODO: Track if Quick Response was used
+            'quick_response_title' => null,
+            'message_body' => $messageBody,
+            'recipients_count' => count($phoneNumbers),
+            'success_count' => $successCount,
+            'failure_count' => $failureCount,
+            'total_cost' => $totalCost,
+        ]);
+
         // Return results page
         return view('conversations.broadcast-results', [
             'results' => $results,
@@ -960,6 +974,24 @@ class ConversationController extends Controller
             'totalCost' => $totalCost,
             'messageBody' => $messageBody,
         ]);
+    }
+
+    /**
+     * Show broadcast history (Admin only)
+     */
+    public function broadcastHistory()
+    {
+        // Check if user is admin
+        if (!auth()->user()->is_admin) {
+            return redirect()->route('conversations.index')
+                ->with('error', '❌ Access denied. Admin privileges required.');
+        }
+
+        // Get broadcast history, most recent first
+        $broadcasts = \App\Models\BroadcastHistory::orderBy('sent_at', 'desc')
+            ->paginate(20);
+
+        return view('conversations.broadcast-history', compact('broadcasts'));
     }
 }
 

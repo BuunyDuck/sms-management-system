@@ -67,6 +67,7 @@ Route::middleware('auth')->group(function () {
     Route::middleware('auth')->group(function () {
         Route::get('/conversations/broadcast', [ConversationController::class, 'broadcast'])->name('conversations.broadcast');
         Route::post('/conversations/broadcast/send', [ConversationController::class, 'broadcastSend'])->name('conversations.broadcast.send');
+        Route::get('/conversations/broadcast/history', [ConversationController::class, 'broadcastHistory'])->name('conversations.broadcast.history');
     });
     
     // SMS Test Page (protected)
