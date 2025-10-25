@@ -822,6 +822,11 @@ class ConversationController extends Controller
             $mediaUrl = url('/media/' . $filename);
         }
 
+        // Add footer for unmonitored number
+        if ($fromNumber === '+14066076333') {
+            $messageBody .= "\n\n⚠️ This is ONE WAY message.⚠️\nDO NOT REPLY: this is UNMONITORED.";
+        }
+
         // Prepare options
         $options = [
             'from' => $fromNumber,  // Use selected from number
