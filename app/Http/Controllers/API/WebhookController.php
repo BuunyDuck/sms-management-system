@@ -313,15 +313,56 @@ class WebhookController extends Controller
         $messageSid = $request->input('MessageSid');
         $messageStatus = $request->input('MessageStatus');
         $to = $request->input('To');
+        $errorCode = $request->input('ErrorCode');
+        $errorMessage = $request->input('ErrorMessage');
 
         Log::info('📊 SMS Status Update', [
             'message_sid' => $messageSid,
             'status' => $messageStatus,
             'to' => $to,
+            'error_code' => $errorCode,
+            'error_message' => $errorMessage,
             'timestamp' => now(),
         ]);
 
-        // TODO: Later update database record with delivery status
+        try {
+            // Update the message status in database
+            $updated = SmsMessage::where('MESSAGESID', $messageSid)
+                ->update([
+                    'MESSAGESTATUS' => $messageStatus,
+                    'status_updated_at' => now(),
+                ]);
+
+            if ($updated) {
+                Log::info('✅ Database updated with delivery status', [
+                    'message_sid' => $messageSid,
+                    'status' => $messageStatus,
+                    'rows_updated' => $updated,
+                ]);
+            } else {
+                Log::warning('⚠️ No message found to update', [
+                    'message_sid' => $messageSid,
+                    'status' => $messageStatus,
+                ]);
+            }
+
+            // Log errors if present
+            if ($errorCode) {
+                Log::error('❌ Twilio delivery error', [
+                    'message_sid' => $messageSid,
+                    'error_code' => $errorCode,
+                    'error_message' => $errorMessage,
+                    'to' => $to,
+                ]);
+            }
+
+        } catch (\Exception $e) {
+            Log::error('❌ Failed to update message status', [
+                'message_sid' => $messageSid,
+                'error' => $e->getMessage(),
+            ]);
+            // Don't fail the webhook response
+        }
 
         return response('OK', 200);
     }

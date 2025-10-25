@@ -217,6 +217,30 @@
             text-align: right;
         }
 
+        .delivery-status {
+            font-size: 10px;
+            margin-left: 4px;
+            display: inline-block;
+        }
+
+        .delivery-status-delivered {
+            color: #34c759;
+        }
+
+        .delivery-status-sent {
+            color: #8e8e93;
+        }
+
+        .delivery-status-queued,
+        .delivery-status-sending {
+            color: #ff9500;
+        }
+
+        .delivery-status-failed,
+        .delivery-status-undelivered {
+            color: #ff3b30;
+        }
+
         .message-media {
             max-width: 100%;
             margin-top: 8px;
@@ -595,6 +619,19 @@
                 @endif
                 <div class="message-timestamp">
                     {{ $message->thetime->format('g:i A') }}
+                    @if($message->isOutbound() && $message->MESSAGESTATUS)
+                        <span class="delivery-status delivery-status-{{ strtolower($message->MESSAGESTATUS) }}" title="{{ ucfirst($message->MESSAGESTATUS) }}{{ $message->status_updated_at ? ' at ' . $message->status_updated_at->format('g:i A') : '' }}">
+                            @if($message->MESSAGESTATUS === 'delivered')
+                                ✓✓
+                            @elseif($message->MESSAGESTATUS === 'sent')
+                                ✓
+                            @elseif($message->MESSAGESTATUS === 'queued' || $message->MESSAGESTATUS === 'sending')
+                                ⏱
+                            @elseif($message->MESSAGESTATUS === 'failed' || $message->MESSAGESTATUS === 'undelivered')
+                                ✗
+                            @endif
+                        </span>
+                    @endif
                 </div>
             </div>
         @endforeach

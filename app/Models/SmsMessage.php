@@ -27,6 +27,7 @@ class SmsMessage extends Model
      */
     protected $casts = [
         'thetime' => 'datetime',
+        'status_updated_at' => 'datetime',
         'NUMMEDIA' => 'integer',
     ];
     
@@ -68,6 +69,7 @@ class SmsMessage extends Model
         'replies_to_support',
         'is_bot_interaction',
         'archived',
+        'status_updated_at',
     ];
 
     /**
