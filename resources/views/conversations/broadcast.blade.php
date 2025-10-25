@@ -330,7 +330,7 @@
             </label>
             <select id="from-number" class="phone-input" style="min-height: auto; height: 44px; cursor: pointer; background-color: white;">
                 @foreach(config('services.twilio.from_numbers') as $number => $label)
-                    <option value="{{ $number }}" {{ $loop->first ? 'selected' : '' }}>
+                    <option value="{{ $number }}" {{ $number === '+14066076333' ? 'selected' : '' }}>
                         {{ $number }} - {{ $label }}
                     </option>
                 @endforeach
@@ -389,7 +389,7 @@
             <form id="compose-form" method="POST" action="{{ route('conversations.broadcast.send') }}" enctype="multipart/form-data" class="compose-form">
                 @csrf
                 <input type="hidden" name="phone_numbers" id="phone-numbers-field">
-                <input type="hidden" name="from_number" id="from-number-field" value="{{ config('services.twilio.from_number') }}">
+                <input type="hidden" name="from_number" id="from-number-field" value="+14066076333">
                 <input type="file" id="file-input" name="media_file" accept="image/*,video/*" style="display: none;">
                 
                 <div class="compose-input-wrapper">
